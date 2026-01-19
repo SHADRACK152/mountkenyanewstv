@@ -1,0 +1,23 @@
+# Node
+node_modules/
+
+# Build output
+dist/
+server/dist/
+
+# Env
+.env
+.env.local
+server/.env
+
+# IDE
+.vscode/
+.DS_Store
+
+# Uploads (don't commit user uploads)
+server/server/uploads/*
+!server/server/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
