@@ -7,7 +7,7 @@ import { v2 as cloudinary } from 'cloudinary';
 // Database
 const pool = new Pool({ 
   connectionString: process.env.NEON_DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: true }
 });
 
 async function query(text: string, params?: any[]) {
