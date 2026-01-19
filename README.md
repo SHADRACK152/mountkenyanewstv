@@ -144,20 +144,53 @@ SMTP_FROM=info@yourdomain.com
 
 ---
 
-## 🌐 Deployment
+## 🌐 Deployment (Vercel - All-in-One)
 
-### Frontend → Vercel
-1. Import repository to [Vercel](https://vercel.com)
-2. Set Framework Preset: **Vite**
-3. Add environment variable: `VITE_API_URL`
-4. Deploy
+This project is configured for **unified deployment** on Vercel - both frontend and backend API run from the same domain.
 
-### Backend → Railway
-1. Create project on [Railway](https://railway.app)
-2. Connect GitHub repository
-3. Set Root Directory: `server`
-4. Add all environment variables
-5. Deploy
+### Deploy to Vercel
+
+1. **Import Repository**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "Add New" → "Project"
+   - Import from GitHub: `SHADRACK152/mountkenyanewstv`
+
+2. **Configure Project**
+   - Framework Preset: **Vite**
+   - Build Command: `npm run build` (auto-detected)
+   - Output Directory: `dist` (auto-detected)
+
+3. **Add Environment Variables**
+   ```
+   # Database (Neon PostgreSQL)
+   NEON_DATABASE_URL=postgresql://neondb_owner:npg_ZBhsyAzMF84m@ep-odd-waterfall-a49u2nmr-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+   
+   # Admin Authentication
+   ADMIN_USER=admin
+   ADMIN_PASS=Mtkenya@2025
+   ADMIN_JWT_SECRET=Z7w3kq9bY4sXrP2n
+   
+   # Email (Namecheap Private Email)
+   SMTP_HOST=mail.privateemail.com
+   SMTP_PORT=587
+   SMTP_USER=info@mtkenyanews.com
+   SMTP_PASS=Mtkenya@123
+   SMTP_FROM=info@mtkenyanews.com
+   
+   # Cloudinary (for image uploads)
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   ```
+
+4. **Deploy!**
+   - Click "Deploy"
+   - Your site will be live at `https://your-project.vercel.app`
+
+### Custom Domain
+1. Go to Project → Settings → Domains
+2. Add `mtkenyanews.com`
+3. Update DNS records at Namecheap
 
 ---
 
@@ -181,6 +214,8 @@ SMTP_FROM=info@yourdomain.com
 
 ```
 mountkenyanewstv/
+├── api/
+│   └── index.ts           # Vercel serverless API (all endpoints)
 ├── public/                 # Static assets
 │   └── mtker.png          # Logo
 ├── src/
@@ -190,12 +225,8 @@ mountkenyanewstv/
 │   ├── lib/               # API & utilities
 │   └── pages/             # Page components
 │       └── admin/         # Admin dashboard pages
-├── server/
-│   ├── src/
-│   │   ├── index.ts       # Express server
-│   │   ├── db.ts          # Database connection
-│   │   └── init-db.ts     # Database initialization
-│   └── schema.sql         # Database schema
+├── server/                # Legacy Express server (local dev)
+├── vercel.json            # Vercel configuration
 └── README.md
 ```
 

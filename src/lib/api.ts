@@ -1,6 +1,7 @@
 import type { ArticleWithRelations } from './database.types';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// Use relative URL in production (same origin), or localhost for development
+const API = import.meta.env.VITE_API_URL || '';
 
 async function getJSON(path: string) {
   const res = await fetch(`${API}${path}`);

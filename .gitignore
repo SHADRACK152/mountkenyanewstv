@@ -5,10 +5,12 @@ node_modules/
 dist/
 server/dist/
 
-# Env
+# Env files with secrets
 .env
 .env.local
 server/.env
+vercel.env
+railway.env
 
 # IDE
 .vscode/
