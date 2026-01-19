@@ -1,10 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import ReactQuill, { Quill } from 'react-quill-new';
+import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import ImageResize from 'quill-image-resize-module-react';
-
-// Register the image resize module
-Quill.register('modules/imageResize', ImageResize);
 import { createArticle, getCategories, getAuthors, uploadFile, getPresign } from '../../lib/api';
 import { 
   ArrowLeft, ArrowRight, Save, Clock, Image, X, Check,
@@ -194,11 +190,7 @@ export default function CreateArticle() {
       ['link', 'image', 'video'],
       [{ 'color': [] }, { 'background': [] }],
       ['clean']
-    ],
-    imageResize: {
-      parchment: Quill.import('parchment'),
-      modules: ['Resize', 'DisplaySize', 'Toolbar']
-    }
+    ]
   }), []);
 
   const quillFormats = [
@@ -206,8 +198,7 @@ export default function CreateArticle() {
     'list', 'indent', 'align',
     'blockquote', 'code-block',
     'link', 'image', 'video',
-    'color', 'background',
-    'width', 'height', 'style'
+    'color', 'background'
   ];
 
   const steps = [
