@@ -131,6 +131,9 @@ export default function AdminSubscribers() {
           <a href="#admin/subscribers" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white">
             <span>📧</span> Subscribers
           </a>
+          <a href="#admin/gallery" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+            <span>🖼️</span> Gallery
+          </a>
           <a href="#admin/settings" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors">
             <span>⚙️</span> Settings
           </a>

@@ -21,10 +21,11 @@ import AdminAuthors from './pages/admin/Authors';
 import AdminComments from './pages/admin/Comments';
 import AdminSubscribers from './pages/admin/Subscribers';
 import AdminSettings from './pages/admin/Settings';
+import AdminGallery from './pages/admin/Gallery';
 import SubscribeModal from './components/SubscribeModal';
 import { updatePageTitle, resetMetaTags } from './lib/seo';
 
-type Page = 'home' | 'category' | 'article' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'subscribe';
+type Page = 'home' | 'category' | 'article' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'subscribe';
 
 interface RouteState {
   page: Page;
@@ -123,6 +124,8 @@ function App() {
         setRoute({ page: 'admin-comments' });
       } else if (hash === 'admin/subscribers') {
         setRoute({ page: 'admin-subscribers' });
+      } else if (hash === 'admin/gallery') {
+        setRoute({ page: 'admin-gallery' });
       } else if (hash === 'admin/settings') {
         setRoute({ page: 'admin-settings' });
       } else if (hash === 'admin/login' || hash === 'admin-login') {
@@ -172,6 +175,8 @@ function App() {
         return <AdminRoute><AdminComments /></AdminRoute>;
       case 'admin-subscribers':
         return <AdminRoute><AdminSubscribers /></AdminRoute>;
+      case 'admin-gallery':
+        return <AdminRoute><AdminGallery /></AdminRoute>;
       case 'admin-settings':
         return <AdminRoute><AdminSettings /></AdminRoute>;
       case 'search':

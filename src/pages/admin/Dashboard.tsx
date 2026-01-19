@@ -3,7 +3,7 @@ import { getAdminStats, getCategories, getAuthors } from '../../lib/api';
 import { 
   LayoutDashboard, FileText, Eye, TrendingUp, Plus, 
   LogOut, Settings, Users, Folder, ArrowUpRight, Calendar,
-  MessageSquare, Mail
+  MessageSquare, Mail, Image
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -78,6 +78,10 @@ export default function AdminDashboard() {
           <a href="#admin/subscribers" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Mail size={18} />
             Subscribers
+          </a>
+          <a href="#admin/gallery" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Image size={18} />
+            Gallery
           </a>
           <a href="#admin/settings" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Settings size={18} />

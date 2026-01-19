@@ -9,7 +9,7 @@ import { createArticle, getCategories, getAuthors, uploadFile, getPresign } from
 import { 
   ArrowLeft, ArrowRight, Save, Clock, Image, X, Check,
   LayoutDashboard, FileText, Plus, LogOut, Folder, Users, Settings,
-  Type, AlignLeft, ImageIcon, Tag
+  Type, AlignLeft, ImageIcon, Tag, MessageSquare, Mail
 } from 'lucide-react';
 
 interface StepProps {
@@ -253,6 +253,18 @@ export default function CreateArticle() {
           <a href="#admin/authors" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Users size={18} />
             Authors
+          </a>
+          <a href="#admin/comments" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <MessageSquare size={18} />
+            Comments
+          </a>
+          <a href="#admin/subscribers" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Mail size={18} />
+            Subscribers
+          </a>
+          <a href="#admin/gallery" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Image size={18} />
+            Gallery
           </a>
           <a href="#admin/settings" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Settings size={18} />
