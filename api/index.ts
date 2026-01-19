@@ -106,7 +106,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  const url = req.url || '';
+  // Get the pathname without query string
+  const fullUrl = req.url || '';
+  const url = fullUrl.split('?')[0];
   const method = req.method || 'GET';
   
   try {
@@ -115,13 +117,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // =====================
     
     // GET /api/categories
-    if (url.match(/^\/api\/categories\/?$/) && method === 'GET') {
+    if ((url === '/api/categories' || url === '/api/categories/') && method === 'GET') {
       const result = await query('SELECT id, name, slug, description, created_at FROM categories ORDER BY name');
       return res.json(result.rows);
     }
     
     // GET /api/authors
-    if (url.match(/^\/api\/authors\/?$/) && method === 'GET') {
+    if ((url === '/api/authors' || url === '/api/authors/') && method === 'GET') {
       const result = await query('SELECT id, name, bio, avatar_url, created_at FROM authors ORDER BY name');
       return res.json(result.rows);
     }
@@ -144,24 +146,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // GET /api/articles/breaking
-    if (url.match(/^\/api\/articles\/breaking/) && method === 'GET') {
-      const limit = parseInt((req.query.limit as string) || '5', 10);
-      const q = `SELECT ${ARTICLE_SELECT} FROM articles a JOIN categories c ON a.category_id = c.id JOIN authors au ON a.author_id = au.id WHERE a.is_breaking = true ORDER BY a.published_at DESC LIMIT $1`;
-      const result = await query(q, [limit]);
-      return res.json(result.rows);
+    if (url === '/api/articles/breaking' || url.startsWith('/api/articles/breaking')) {
+      if (method === 'GET') {
+        const limit = parseInt((req.query.limit as string) || '5', 10);
+        const q = `SELECT ${ARTICLE_SELECT} FROM articles a JOIN categories c ON a.category_id = c.id JOIN authors au ON a.author_id = au.id WHERE a.is_breaking = true ORDER BY a.published_at DESC LIMIT $1`;
+        const result = await query(q, [limit]);
+        return res.json(result.rows);
+      }
     }
     
     // GET /api/articles/related
-    if (url.match(/^\/api\/articles\/related/) && method === 'GET') {
-      const { category_id, exclude_id, limit } = req.query;
-      const lim = parseInt((limit as string) || '3', 10);
-      const q = `SELECT ${ARTICLE_SELECT} FROM articles a JOIN categories c ON a.category_id = c.id JOIN authors au ON a.author_id = au.id WHERE a.category_id = $1 AND a.id <> $2 ORDER BY a.published_at DESC LIMIT $3`;
-      const result = await query(q, [category_id, exclude_id, lim]);
-      return res.json(result.rows);
+    if (url === '/api/articles/related' || url.startsWith('/api/articles/related')) {
+      if (method === 'GET') {
+        const { category_id, exclude_id, limit } = req.query;
+        const lim = parseInt((limit as string) || '3', 10);
+        const q = `SELECT ${ARTICLE_SELECT} FROM articles a JOIN categories c ON a.category_id = c.id JOIN authors au ON a.author_id = au.id WHERE a.category_id = $1 AND a.id <> $2 ORDER BY a.published_at DESC LIMIT $3`;
+        const result = await query(q, [category_id, exclude_id, lim]);
+        return res.json(result.rows);
+      }
     }
     
     // GET /api/articles
-    if (url.match(/^\/api\/articles\/?(\?|$)/) && method === 'GET') {
+    if ((url === '/api/articles' || url === '/api/articles/') && method === 'GET') {
       const { featured, trending, limit, category_id } = req.query;
       const lim = parseInt((limit as string) || '5', 10);
       let q = `SELECT ${ARTICLE_SELECT} FROM articles a JOIN categories c ON a.category_id = c.id JOIN authors au ON a.author_id = au.id`;
@@ -268,7 +274,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // POST /api/subscribe
-    if (url.match(/^\/api\/subscribe\/?$/) && method === 'POST') {
+    if ((url === '/api/subscribe' || url === '/api/subscribe/') && method === 'POST') {
       const { email, name } = req.body || {};
       if (!email || !email.includes('@')) {
         return res.status(400).json({ error: 'Valid email is required' });
@@ -290,7 +296,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // POST /api/unsubscribe
-    if (url.match(/^\/api\/unsubscribe\/?$/) && method === 'POST') {
+    if ((url === '/api/unsubscribe' || url === '/api/unsubscribe/') && method === 'POST') {
       const { email } = req.body || {};
       if (!email) return res.status(400).json({ error: 'Email is required' });
       await query('UPDATE subscribers SET unsubscribed_at = NOW() WHERE email = $1', [email.toLowerCase()]);
@@ -298,39 +304,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // GET /api/subscribe/check
-    if (url.match(/^\/api\/subscribe\/check/) && method === 'GET') {
-      const email = req.query.email as string;
-      if (!email) return res.status(400).json({ error: 'Email is required' });
-      const result = await query(
-        'SELECT id, name, is_verified, subscribed_at FROM subscribers WHERE email = $1 AND unsubscribed_at IS NULL',
-        [String(email).toLowerCase()]
-      );
-      if (result.rows.length === 0) {
-        return res.json({ subscribed: false });
+    if (url === '/api/subscribe/check' || url.startsWith('/api/subscribe/check')) {
+      if (method === 'GET') {
+        const email = req.query.email as string;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+        const result = await query(
+          'SELECT id, name, is_verified, subscribed_at FROM subscribers WHERE email = $1 AND unsubscribed_at IS NULL',
+          [String(email).toLowerCase()]
+        );
+        if (result.rows.length === 0) {
+          return res.json({ subscribed: false });
+        }
+        return res.json({ subscribed: true, subscriber: result.rows[0] });
       }
-      return res.json({ subscribed: true, subscriber: result.rows[0] });
     }
     
     // GET /api/search
-    if (url.match(/^\/api\/search/) && method === 'GET') {
-      const q = req.query.q;
-      if (!q || typeof q !== 'string') {
-        return res.json([]);
+    if (url === '/api/search' || url.startsWith('/api/search')) {
+      if (method === 'GET') {
+        const q = req.query.q;
+        if (!q || typeof q !== 'string') {
+          return res.json([]);
+        }
+        const searchQuery = `%${q}%`;
+        const result = await query(
+          `SELECT ${ARTICLE_SELECT} FROM articles a 
+           JOIN categories c ON a.category_id = c.id 
+           JOIN authors au ON a.author_id = au.id 
+           WHERE a.title ILIKE $1 OR a.excerpt ILIKE $1 OR a.content ILIKE $1
+           ORDER BY a.published_at DESC LIMIT 50`,
+          [searchQuery]
+        );
+        return res.json(result.rows);
       }
-      const searchQuery = `%${q}%`;
-      const result = await query(
-        `SELECT ${ARTICLE_SELECT} FROM articles a 
-         JOIN categories c ON a.category_id = c.id 
-         JOIN authors au ON a.author_id = au.id 
-         WHERE a.title ILIKE $1 OR a.excerpt ILIKE $1 OR a.content ILIKE $1
-         ORDER BY a.published_at DESC LIMIT 50`,
-        [searchQuery]
-      );
-      return res.json(result.rows);
     }
     
     // POST /api/contact
-    if (url.match(/^\/api\/contact\/?$/) && method === 'POST') {
+    if ((url === '/api/contact' || url === '/api/contact/') && method === 'POST') {
       const { name, email, subject, message } = req.body;
       if (!name || !email || !subject || !message) {
         return res.status(400).json({ error: 'All fields are required' });
@@ -388,7 +398,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // POST /api/upload (Cloudinary)
-    if (url.match(/^\/api\/upload\/?$/) && method === 'POST') {
+    if ((url === '/api/upload' || url === '/api/upload/') && method === 'POST') {
       if (!checkAdmin(req)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -421,7 +431,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // =====================
     
     // POST /api/admin/login
-    if (url.match(/^\/api\/admin\/login\/?$/) && method === 'POST') {
+    if ((url === '/api/admin/login' || url === '/api/admin/login/') && method === 'POST') {
       const { username, password } = req.body || {};
       if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
       if (username === ADMIN_USER && password === ADMIN_PASS) {
@@ -436,28 +446,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // =====================
     
     // Check admin for all /api/admin/* routes (except login)
-    if (url.startsWith('/api/admin/') && !url.includes('/login')) {
+    if (url.startsWith('/api/admin') && !url.includes('/login')) {
       if (!checkAdmin(req)) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
     }
     
     // GET /api/admin/stats
-    if (url.match(/^\/api\/admin\/stats\/?$/) && method === 'GET') {
+    if ((url === '/api/admin/stats' || url === '/api/admin/stats/') && method === 'GET') {
       const top = await query('SELECT id, title, views FROM articles ORDER BY views DESC LIMIT 10');
       const totals = await query("SELECT COUNT(*) AS articles_count, SUM(views) AS total_views FROM articles");
       return res.json({ top: top.rows, totals: totals.rows[0] });
     }
     
     // GET /api/admin/articles
-    if (url.match(/^\/api\/admin\/articles\/?$/) && method === 'GET') {
+    if ((url === '/api/admin/articles' || url === '/api/admin/articles/') && method === 'GET') {
       const q = `SELECT ${ARTICLE_SELECT} FROM articles a JOIN categories c ON a.category_id = c.id JOIN authors au ON a.author_id = au.id ORDER BY a.published_at DESC`;
       const result = await query(q);
       return res.json(result.rows);
     }
     
     // POST /api/admin/articles
-    if (url.match(/^\/api\/admin\/articles\/?$/) && method === 'POST') {
+    if ((url === '/api/admin/articles' || url === '/api/admin/articles/') && method === 'POST') {
       const a = req.body;
       const q = `INSERT INTO articles (title, slug, excerpt, content, featured_image, category_id, author_id, published_at, reading_time, is_featured, is_breaking) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`;
       const params = [a.title, a.slug, a.excerpt, a.content, a.featured_image, a.category_id, a.author_id, a.published_at, a.reading_time || 0, a.is_featured || false, a.is_breaking || false];
@@ -503,7 +513,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // POST /api/admin/categories
-    if (url.match(/^\/api\/admin\/categories\/?$/) && method === 'POST') {
+    if ((url === '/api/admin/categories' || url === '/api/admin/categories/') && method === 'POST') {
       const { name, slug, description } = req.body || {};
       if (!name || !slug) return res.status(400).json({ error: 'Name and slug required' });
       try {
@@ -548,7 +558,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // POST /api/admin/authors
-    if (url.match(/^\/api\/admin\/authors\/?$/) && method === 'POST') {
+    if ((url === '/api/admin/authors' || url === '/api/admin/authors/') && method === 'POST') {
       const { name, email, bio, avatar_url } = req.body || {};
       if (!name) return res.status(400).json({ error: 'Name required' });
       try {
@@ -594,7 +604,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // GET /api/admin/comments
-    if (url.match(/^\/api\/admin\/comments\/?$/) && method === 'GET') {
+    if ((url === '/api/admin/comments' || url === '/api/admin/comments/') && method === 'GET') {
       const result = await query(`
         SELECT 
           cm.id, cm.content, cm.is_approved, cm.created_at,
@@ -625,7 +635,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // GET /api/admin/subscribers
-    if (url.match(/^\/api\/admin\/subscribers\/?$/) && method === 'GET') {
+    if ((url === '/api/admin/subscribers' || url === '/api/admin/subscribers/') && method === 'GET') {
       const result = await query(`
         SELECT 
           s.id, s.email, s.name, s.is_verified, s.subscribed_at, s.unsubscribed_at,
