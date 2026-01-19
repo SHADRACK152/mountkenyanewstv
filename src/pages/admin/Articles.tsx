@@ -57,7 +57,7 @@ export default function AdminArticles() {
             </div>
             <div>
               <h1 className="font-bold">MT Kenya News</h1>
-              <p className="text-xs text-gray-400">Admin Panel</p></p>
+              <p className="text-xs text-gray-400">Admin Panel</p>
             </div>
           </div>
         </div>
