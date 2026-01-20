@@ -150,10 +150,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour for crawlers
         return res.status(200).send(html);
       } else {
-        // Regular user - immediate 302 redirect (no "Redirecting..." message)
-        res.setHeader('Location', fullUrl);
+        // Regular user - instant JavaScript redirect (HTTP 302 doesn't work with hash URLs)
+        const redirectHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><script>window.location.replace("${fullUrl}");</script></head><body></body></html>`;
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');
-        return res.status(302).end();
+        return res.status(200).send(redirectHtml);
       }
     }
     
