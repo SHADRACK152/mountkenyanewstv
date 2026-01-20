@@ -99,19 +99,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Track click
       await query('UPDATE short_links SET clicks = clicks + 1 WHERE code = $1', [code]);
       
-      // Helper function to escape HTML
-      function escapeHtml(text: string): string {
-        return text
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
-      }
+      // Check if request is from a social media crawler/bot
+      const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|googlebot|bingbot|yandex|baiduspider|duckduckbot/i.test(userAgent);
       
-      // Always serve HTML with Open Graph meta tags for all requests
-      // This ensures WhatsApp, Facebook, Twitter etc. can preview the image
-      const html = `<!DOCTYPE html>
+      if (isCrawler) {
+        // Serve HTML with Open Graph meta tags for crawlers to parse preview
+        function escapeHtml(text: string): string {
+          return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+        
+        const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -138,19 +141,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <!-- WhatsApp specific -->
   <meta property="og:image:alt" content="${escapeHtml(article.title)}">
   
-  <!-- Redirect after meta tags are parsed -->
-  <meta http-equiv="refresh" content="0;url=${fullUrl}">
   <link rel="canonical" href="${fullUrl}">
 </head>
-<body>
-  <p>Redirecting to <a href="${fullUrl}">${escapeHtml(article.title)}</a>...</p>
-  <script>window.location.href = "${fullUrl}";</script>
-</body>
+<body></body>
 </html>`;
-      
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 mins
-      return res.status(200).send(html);
+        
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour for crawlers
+        return res.status(200).send(html);
+      } else {
+        // Regular user - immediate 302 redirect (no "Redirecting..." message)
+        res.setHeader('Location', fullUrl);
+        res.setHeader('Cache-Control', 'no-cache');
+        return res.status(302).end();
+      }
     }
     
     // ===== PUBLIC ROUTES =====
