@@ -402,7 +402,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                       <input 
                         type="text" 
                         readOnly 
-                        value={getShortUrl()} 
+                        value={getShareUrl()} 
                         className="flex-1 bg-transparent text-sm text-gray-600 outline-none font-mono"
                       />
                     )}
