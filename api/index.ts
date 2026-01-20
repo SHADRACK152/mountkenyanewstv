@@ -74,6 +74,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ===== PUBLIC ROUTES =====
     
+    // Fix malformed slugs (one-time fix)
+    if (path === '/api/fix-slugs') {
+      const secretKey = 'mtkenya2025fix';
+      const providedKey = new URL(req.url || '', 'http://localhost').searchParams.get('key');
+      
+      if (providedKey !== secretKey) {
+        return res.status(401).json({ error: 'Invalid key' });
+      }
+      
+      // Get all articles with malformed slugs (containing spaces or uppercase)
+      const articles = await query(`SELECT id, title, slug FROM articles`);
+      const fixed: any[] = [];
+      
+      for (const article of articles.rows) {
+        // Create proper slug: lowercase, replace spaces with dashes, remove special chars
+        const properSlug = article.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+          .replace(/\s+/g, '-') // Replace spaces with dashes
+          .replace(/-+/g, '-') // Replace multiple dashes with single dash
+          .replace(/^-|-$/g, '') // Remove leading/trailing dashes
+          .substring(0, 100); // Limit length
+        
+        if (article.slug !== properSlug) {
+          await query(`UPDATE articles SET slug = $1 WHERE id = $2`, [properSlug, article.id]);
+          fixed.push({ id: article.id, oldSlug: article.slug, newSlug: properSlug });
+        }
+      }
+      
+      return res.json({
+        success: true,
+        message: 'Fixed malformed slugs',
+        fixed: fixed.length,
+        details: fixed
+      });
+    }
+    
     // One-time emergency fix for localhost images (uses secret key)
     if (path === '/api/emergency-fix-images') {
       const secretKey = 'mtkenya2025fix';
