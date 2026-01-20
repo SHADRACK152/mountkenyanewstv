@@ -90,7 +90,7 @@ export default function Home() {
       {/* Hero Section - Full Width Slider */}
       <section className="pt-[200px] lg:pt-[220px]">
         {featuredArticles.length > 0 && (
-          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden group">
+          <div className="relative w-full h-[400px] md:h-[450px] lg:h-[500px] overflow-hidden group">
             {/* Slides */}
             {featuredArticles.map((article, index) => (
               <div
@@ -101,39 +101,38 @@ export default function Home() {
                     : 'opacity-0 scale-105'
                 }`}
               >
-                {/* Background Image */}
+                {/* Background Image - focus on top/center for faces */}
                 <img
                   src={article.featured_image}
                   alt={article.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
                 
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
+                {/* Gradient Overlay - lighter to show more image */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 
                 {/* Content */}
                 <div className="absolute inset-0 flex items-end">
-                  <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
-                    <div className="max-w-4xl">
+                  <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
+                    <div className="max-w-3xl">
                       {/* Breaking Badge */}
                       {article.is_breaking && (
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-4 animate-pulse">
-                          <span className="w-2 h-2 bg-white rounded-full"></span>
-                          Breaking News
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-3 animate-pulse">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                          Breaking
                         </div>
                       )}
                       
                       {/* Category */}
                       <a 
                         href={`#category/${article.categories.slug}`}
-                        className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold uppercase tracking-wider rounded-full mb-4 shadow-lg transition-all"
+                        className="inline-block px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-3 shadow-lg transition-all"
                       >
                         {article.categories.name}
                       </a>
                       
                       {/* Title */}
-                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 leading-tight">
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 leading-tight">
                         <a 
                           href={`#article/${article.slug}`}
                           className="hover:text-blue-200 transition-colors"
@@ -142,41 +141,41 @@ export default function Home() {
                         </a>
                       </h1>
                       
-                      {/* Excerpt */}
-                      <p className="text-lg md:text-xl text-gray-200 mb-6 line-clamp-2 max-w-3xl">
+                      {/* Excerpt - hidden on mobile for compact view */}
+                      <p className="hidden sm:block text-base md:text-lg text-gray-200 mb-4 line-clamp-2 max-w-2xl">
                         {article.excerpt}
                       </p>
                       
                       {/* Meta Info */}
-                      <div className="flex flex-wrap items-center gap-4 md:gap-6 text-gray-300">
-                        <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-300">
+                        <div className="flex items-center gap-2">
                           <img
                             src={article.authors.avatar_url}
                             alt={article.authors.name}
-                            className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white/50"
+                            className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white/50"
                           />
                           <span className="font-semibold text-white">{article.authors.name}</span>
                         </div>
                         <span className="hidden md:inline text-gray-400">•</span>
-                        <span>{formatHeroDate(article.published_at)}</span>
+                        <span className="hidden sm:inline">{formatHeroDate(article.published_at)}</span>
                         <span className="hidden md:inline text-gray-400">•</span>
-                        <div className="flex items-center gap-2">
-                          <Clock size={16} />
-                          <span>{article.reading_time} min read</span>
+                        <div className="flex items-center gap-1">
+                          <Clock size={14} />
+                          <span>{article.reading_time} min</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Eye size={16} />
-                          <span>{article.views?.toLocaleString() || 0} views</span>
+                        <div className="flex items-center gap-1">
+                          <Eye size={14} />
+                          <span>{article.views?.toLocaleString() || 0}</span>
                         </div>
                       </div>
                       
                       {/* Read More Button */}
                       <a
                         href={`#article/${article.slug}`}
-                        className="inline-flex items-center gap-2 mt-6 px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
+                        className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
                       >
                         Read Full Story
-                        <ChevronRight size={20} />
+                        <ChevronRight size={18} />
                       </a>
                     </div>
                   </div>
