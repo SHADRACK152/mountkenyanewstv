@@ -74,6 +74,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ===== PUBLIC ROUTES =====
     
+    // Test Cloudinary connection
+    if (path === '/api/test-cloudinary') {
+      const config = {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'NOT SET',
+        api_key: process.env.CLOUDINARY_API_KEY ? '***' + process.env.CLOUDINARY_API_KEY.slice(-4) : 'NOT SET',
+        api_secret: process.env.CLOUDINARY_API_SECRET ? '***configured***' : 'NOT SET',
+      };
+      
+      // Try to ping Cloudinary
+      try {
+        const result = await cloudinary.api.ping();
+        return res.json({ 
+          status: 'connected', 
+          config,
+          ping: result
+        });
+      } catch (pingErr: any) {
+        return res.json({ 
+          status: 'error', 
+          config,
+          error: pingErr.message || 'Failed to connect to Cloudinary'
+        });
+      }
+    }
+    
     // Categories
     if (path === '/api/categories') {
       const r = await query('SELECT * FROM categories ORDER BY name');
