@@ -68,19 +68,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Get the original path - Vercel uses x-matched-path for the original URL pattern
-  // x-vercel-sc-headers or x-invoke-path may also contain the original path
-  const matchedPath = req.headers['x-matched-path'] as string;
-  const invokePath = req.headers['x-invoke-path'] as string;
-  const originalUrl = matchedPath || invokePath || req.url || '';
-  const path = originalUrl.split('?')[0];
+  // Get the original path from the request URL
+  const url = new URL(req.url || '/', `https://${req.headers.host || 'localhost'}`);
+  const path = url.pathname;
   const method = req.method || 'GET';
+  
+  // Check for short link parameters (passed via Vercel rewrites)
+  const shortLinkCode = url.searchParams.get('shortlink');
+  const pollLinkCode = url.searchParams.get('polllink');
 
   try {
-    // ===== SHORT LINK REDIRECT (check first for /s/:code pattern) =====
-    const shortLinkMatch = path.match(/^\/s\/([A-Za-z0-9]+)$/);
-    if (shortLinkMatch) {
-      const code = shortLinkMatch[1];
+    // ===== ARTICLE SHORT LINK REDIRECT =====
+    if (shortLinkCode) {
+      const code = shortLinkCode;
       
       // Find the article
       const result = await query(
@@ -182,10 +182,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).send(html);
     }
     
-    // ===== POLL SHORT LINK REDIRECT (check for /p/:code pattern) =====
-    const pollLinkMatch = path.match(/^\/p\/([A-Za-z0-9]+)$/);
-    if (pollLinkMatch) {
-      const code = pollLinkMatch[1];
+    // ===== POLL SHORT LINK REDIRECT =====
+    if (pollLinkCode) {
+      const code = pollLinkCode;
       
       // Find the poll
       const result = await query(

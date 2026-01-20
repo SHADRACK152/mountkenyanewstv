@@ -15,11 +15,11 @@
     },
     {
       "source": "/s/:code",
-      "destination": "/api"
+      "destination": "/api?shortlink=:code"
     },
     {
       "source": "/p/:code",
-      "destination": "/api"
+      "destination": "/api?polllink=:code"
     },
     {
       "source": "/(.*)",
