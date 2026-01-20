@@ -90,33 +90,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
       
       if (!result.rows.length) {
-        return res.status(404).json({ error: 'Short link not found' });
+        // Redirect to homepage if not found
+        res.setHeader('Location', 'https://www.mtkenyanews.com/');
+        return res.status(302).end();
       }
       
       const article = result.rows[0];
-      const hashPath = `article/${article.slug}`;
-      const redirectUrl = `https://www.mtkenyanews.com/?goto=${encodeURIComponent(hashPath)}`;
-      const displayUrl = `https://www.mtkenyanews.com/#${hashPath}`;
+      const targetUrl = `https://www.mtkenyanews.com/#article/${article.slug}`;
       
       // Track click
       await query('UPDATE short_links SET clicks = clicks + 1 WHERE code = $1', [code]);
       
-      // Check if request is from a social media crawler/bot
-      const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|googlebot|bingbot|yandex|baiduspider|duckduckbot/i.test(userAgent);
+      // Escape HTML for safe embedding
+      function escapeHtml(text: string): string {
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
       
-      if (isCrawler) {
-        // Serve HTML with Open Graph meta tags for crawlers to parse preview
-        function escapeHtml(text: string): string {
-          return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-        }
-        
-        const html = `<!DOCTYPE html>
+      // Serve a full HTML page with OG tags AND JavaScript redirect
+      // This works for both crawlers (they read OG tags) and users (JS redirects them)
+      const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -125,38 +122,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="article">
-  <meta property="og:url" content="${displayUrl}">
+  <meta property="og:url" content="${targetUrl}">
   <meta property="og:title" content="${escapeHtml(article.title)}">
-  <meta property="og:description" content="${escapeHtml(article.excerpt || '')}">
-  <meta property="og:image" content="${article.featured_image}">
+  <meta property="og:description" content="${escapeHtml(article.excerpt || 'Read more on MT Kenya News')}">
+  <meta property="og:image" content="${article.featured_image || 'https://www.mtkenyanews.com/mtker.png'}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="MT Kenya News">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${displayUrl}">
   <meta name="twitter:title" content="${escapeHtml(article.title)}">
-  <meta name="twitter:description" content="${escapeHtml(article.excerpt || '')}">
-  <meta name="twitter:image" content="${article.featured_image}">
+  <meta name="twitter:description" content="${escapeHtml(article.excerpt || 'Read more on MT Kenya News')}">
+  <meta name="twitter:image" content="${article.featured_image || 'https://www.mtkenyanews.com/mtker.png'}">
   
-  <!-- WhatsApp specific -->
-  <meta property="og:image:alt" content="${escapeHtml(article.title)}">
+  <link rel="canonical" href="${targetUrl}">
   
-  <link rel="canonical" href="${displayUrl}">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); }
+    .container { text-align: center; color: white; padding: 20px; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 1.5rem; margin-bottom: 10px; }
+    p { opacity: 0.9; margin-bottom: 20px; }
+    a { color: white; text-decoration: underline; font-weight: bold; }
+  </style>
+  
+  <script>
+    // Redirect immediately
+    window.location.href = "${targetUrl}";
+  </script>
 </head>
-<body></body>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>Opening Article...</h1>
+    <p>You'll be redirected in a moment</p>
+    <p><a href="${targetUrl}">Click here if not redirected</a></p>
+  </div>
+</body>
 </html>`;
-        
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour for crawlers
-        return res.status(200).send(html);
-      } else {
-        // Regular user - use HTTP 302 redirect to query param URL (no hash)
-        res.setHeader('Location', redirectUrl);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return res.status(302).end();
-      }
+      
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.status(200).send(html);
     }
     
     // ===== POLL SHORT LINK REDIRECT (check for /p/:code pattern) =====
@@ -174,33 +183,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
       
       if (!result.rows.length) {
-        return res.status(404).json({ error: 'Poll link not found' });
+        // Redirect to polls page if not found
+        res.setHeader('Location', 'https://www.mtkenyanews.com/#polls');
+        return res.status(302).end();
       }
       
       const poll = result.rows[0];
-      const hashPath = `poll/${poll.id}`;
-      const redirectUrl = `https://www.mtkenyanews.com/?goto=${encodeURIComponent(hashPath)}`;
-      const displayUrl = `https://www.mtkenyanews.com/#${hashPath}`;
+      const targetUrl = `https://www.mtkenyanews.com/#poll/${poll.id}`;
       
       // Track click
       await query('UPDATE poll_links SET clicks = clicks + 1 WHERE code = $1', [code]);
       
-      // Check if request is from a social media crawler/bot
-      const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|googlebot|bingbot|yandex|baiduspider|duckduckbot/i.test(userAgent);
+      // Escape HTML for safe embedding
+      function escapeHtml(text: string): string {
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
       
-      if (isCrawler) {
-        // Serve HTML with Open Graph meta tags for crawlers to parse preview
-        function escapeHtml(text: string): string {
-          return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-        }
-        
-        const html = `<!DOCTYPE html>
+      // Serve a full HTML page with OG tags AND JavaScript redirect
+      const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -209,7 +214,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${displayUrl}">
+  <meta property="og:url" content="${targetUrl}">
   <meta property="og:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta property="og:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
   <meta property="og:image" content="https://www.mtkenyanews.com/mtker.png">
@@ -219,25 +224,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${displayUrl}">
   <meta name="twitter:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta name="twitter:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
   <meta name="twitter:image" content="https://www.mtkenyanews.com/mtker.png">
   
-  <link rel="canonical" href="${displayUrl}">
+  <link rel="canonical" href="${targetUrl}">
+  
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); }
+    .container { text-align: center; color: white; padding: 20px; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 1.5rem; margin-bottom: 10px; }
+    p { opacity: 0.9; margin-bottom: 20px; }
+    a { color: white; text-decoration: underline; font-weight: bold; }
+  </style>
+  
+  <script>
+    // Redirect immediately
+    window.location.href = "${targetUrl}";
+  </script>
 </head>
-<body></body>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>Opening Poll...</h1>
+    <p>You'll be redirected in a moment</p>
+    <p><a href="${targetUrl}">Click here if not redirected</a></p>
+  </div>
+</body>
 </html>`;
-        
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        return res.status(200).send(html);
-      } else {
-        // Regular user - use HTTP 302 redirect to query param URL (no hash)
-        res.setHeader('Location', redirectUrl);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return res.status(302).end();
-      }
+      
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.status(200).send(html);
     }
     
     // ===== PUBLIC ROUTES =====
