@@ -169,6 +169,97 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
     
+    // ===== POLL SHORT LINK REDIRECT (check for /p/:code pattern) =====
+    const pollLinkMatch = path.match(/^\/p\/([A-Za-z0-9]+)$/);
+    if (pollLinkMatch) {
+      const code = pollLinkMatch[1];
+      
+      // Find the poll
+      const result = await query(
+        `SELECT p.id, p.title, p.description, p.status, p.end_date
+         FROM poll_links pl
+         JOIN polls p ON pl.poll_id = p.id
+         WHERE pl.code = $1`,
+        [code]
+      );
+      
+      if (!result.rows.length) {
+        return res.status(404).json({ error: 'Poll link not found' });
+      }
+      
+      const poll = result.rows[0];
+      const fullUrl = `https://mtkenyanews.com/#poll/${poll.id}`;
+      
+      // Track click
+      await query('UPDATE poll_links SET clicks = clicks + 1 WHERE code = $1', [code]);
+      
+      // Check if request is from a social media crawler/bot
+      const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|googlebot|bingbot|yandex|baiduspider|duckduckbot/i.test(userAgent);
+      
+      if (isCrawler) {
+        // Serve HTML with Open Graph meta tags for crawlers to parse preview
+        function escapeHtml(text: string): string {
+          return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+        
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(poll.title)} - Vote Now | MT Kenya News</title>
+  
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:title" content="🗳️ ${escapeHtml(poll.title)}">
+  <meta property="og:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
+  <meta property="og:image" content="https://mtkenyanews.com/mtker.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="MT Kenya News">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${fullUrl}">
+  <meta name="twitter:title" content="🗳️ ${escapeHtml(poll.title)}">
+  <meta name="twitter:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
+  <meta name="twitter:image" content="https://mtkenyanews.com/mtker.png">
+  
+  <link rel="canonical" href="${fullUrl}">
+</head>
+<body></body>
+</html>`;
+        
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.status(200).send(html);
+      } else {
+        // Regular user - redirect with multiple fallbacks
+        const redirectHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=${fullUrl}">
+  <script>window.location.replace("${fullUrl}");</script>
+  <title>Redirecting...</title>
+</head>
+<body>
+  <p>Redirecting to poll... <a href="${fullUrl}">Click here</a> if not redirected.</p>
+</body>
+</html>`;
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return res.status(200).send(redirectHtml);
+      }
+    }
+    
     // ===== PUBLIC ROUTES =====
     
     // Setup short_links table (one-time setup)
@@ -847,6 +938,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await query('CREATE INDEX IF NOT EXISTS idx_short_links_article ON short_links(article_id)');
       
       return res.json({ success: true, message: 'Short links table created' });
+    }
+    
+    // ===== POLL LINKS (short links for polls) =====
+    
+    // Setup poll_links table
+    if (path === '/api/init-poll-links' && req.query.key === 'mtkenya2025fix') {
+      await query(`
+        CREATE TABLE IF NOT EXISTS poll_links (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          code VARCHAR(10) UNIQUE NOT NULL,
+          poll_id UUID REFERENCES polls(id) ON DELETE CASCADE,
+          clicks INTEGER DEFAULT 0,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      await query('CREATE INDEX IF NOT EXISTS idx_poll_links_code ON poll_links(code)');
+      await query('CREATE INDEX IF NOT EXISTS idx_poll_links_poll ON poll_links(poll_id)');
+      
+      return res.json({ success: true, message: 'Poll links table created' });
+    }
+    
+    // Create short link for a poll
+    if (path === '/api/poll-links' && method === 'POST') {
+      const { poll_id } = req.body || {};
+      if (!poll_id) return res.status(400).json({ error: 'poll_id required' });
+      
+      // Check if poll exists
+      const poll = await query('SELECT id, title FROM polls WHERE id = $1', [poll_id]);
+      if (!poll.rows.length) return res.status(404).json({ error: 'Poll not found' });
+      
+      // Check if short link already exists for this poll
+      const existing = await query('SELECT code FROM poll_links WHERE poll_id = $1', [poll_id]);
+      if (existing.rows.length) {
+        return res.json({ 
+          code: existing.rows[0].code,
+          short_url: `https://mtkenyanews.com/p/${existing.rows[0].code}`,
+          created: false
+        });
+      }
+      
+      // Generate unique short code
+      let code = generateShortCode();
+      let attempts = 0;
+      while (attempts < 10) {
+        const exists = await query('SELECT 1 FROM poll_links WHERE code = $1', [code]);
+        if (!exists.rows.length) break;
+        code = generateShortCode();
+        attempts++;
+      }
+      
+      // Create short link
+      await query(
+        'INSERT INTO poll_links (code, poll_id) VALUES ($1, $2)',
+        [code, poll_id]
+      );
+      
+      return res.json({
+        code,
+        short_url: `https://mtkenyanews.com/p/${code}`,
+        created: true
+      });
+    }
+    
+    // Get poll short link info
+    if (path === '/api/poll-links' && method === 'GET') {
+      const { poll_id } = req.query;
+      if (!poll_id) return res.status(400).json({ error: 'poll_id required' });
+      
+      const result = await query('SELECT code FROM poll_links WHERE poll_id = $1', [poll_id]);
+      if (!result.rows.length) {
+        return res.json({ exists: false });
+      }
+      
+      return res.json({
+        exists: true,
+        code: result.rows[0].code,
+        short_url: `https://mtkenyanews.com/p/${result.rows[0].code}`
+      });
     }
 
     // ===== VOTING POLLS =====

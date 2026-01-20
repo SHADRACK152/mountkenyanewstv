@@ -23,10 +23,12 @@ import AdminSubscribers from './pages/admin/Subscribers';
 import AdminSettings from './pages/admin/Settings';
 import AdminGallery from './pages/admin/Gallery';
 import AdminPolls from './pages/admin/Polls';
+import PollsPage from './pages/PollsPage';
+import PollPage from './pages/PollPage';
 import SubscribeModal from './components/SubscribeModal';
 import { updatePageTitle, resetMetaTags } from './lib/seo';
 
-type Page = 'home' | 'category' | 'article' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'subscribe';
+type Page = 'home' | 'category' | 'article' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'polls' | 'poll' | 'subscribe';
 
 interface RouteState {
   page: Page;
@@ -108,6 +110,13 @@ function App() {
       } else if (hash === 'terms') {
         setRoute({ page: 'terms' });
         updatePageTitle('Terms of Service');
+      } else if (hash === 'polls') {
+        setRoute({ page: 'polls' });
+        updatePageTitle('Voting Polls');
+      } else if (hash.startsWith('poll/')) {
+        const pollId = hash.split('/')[1];
+        setRoute({ page: 'poll', param: pollId });
+        updatePageTitle('Vote Now');
       } else if (hash === 'admin') {
         setRoute({ page: 'admin' });
       } else if (hash === 'admin/articles') {
@@ -194,6 +203,10 @@ function App() {
         return <PrivacyPage />;
       case 'terms':
         return <TermsPage />;
+      case 'polls':
+        return <PollsPage />;
+      case 'poll':
+        return route.param ? <PollPage pollId={route.param} /> : <PollsPage />;
       case 'not-found':
         return <NotFoundPage />;
       default:

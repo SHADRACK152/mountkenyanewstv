@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Opinion', href: '#category/opinion' },
   { name: 'Investigations', href: '#category/investigations' },
   { name: 'Lifestyle', href: '#category/lifestyle' },
+  { name: 'Polls', href: '#polls' },
 ];
 
 export default function Header() {
