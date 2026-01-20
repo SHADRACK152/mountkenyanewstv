@@ -3,6 +3,7 @@ import * as api from '../lib/api';
 import type { ArticleWithRelations, Category } from '../lib/database.types';
 import NewsCard from '../components/NewsCard';
 import { Mail, TrendingUp, Clock, ChevronRight, ChevronLeft, Newspaper, Users, Globe, Award } from 'lucide-react';
+import VotingPoll from '../components/VotingPoll';
 
 export default function Home() {
   const [featuredArticles, setFeaturedArticles] = useState<ArticleWithRelations[]>([]);
@@ -310,6 +311,9 @@ export default function Home() {
                 ))}
               </div>
             </div>
+
+            {/* Voting Poll */}
+            <VotingPoll />
 
             {/* Newsletter Signup */}
             <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-2xl shadow-xl p-6 text-white">

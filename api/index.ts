@@ -819,6 +819,348 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ success: true, message: 'Short links table created' });
     }
 
+    // ===== VOTING POLLS =====
+    
+    // Setup polls tables (one-time)
+    if (path === '/api/setup-polls' && req.query.key === 'mtkenya2025fix') {
+      // Create polls table
+      await query(`
+        CREATE TABLE IF NOT EXISTS polls (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          title VARCHAR(500) NOT NULL,
+          description TEXT,
+          type VARCHAR(50) DEFAULT 'voting',
+          status VARCHAR(20) DEFAULT 'active',
+          start_date TIMESTAMPTZ DEFAULT NOW(),
+          end_date TIMESTAMPTZ,
+          show_results BOOLEAN DEFAULT true,
+          allow_multiple BOOLEAN DEFAULT false,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      
+      // Create poll options table
+      await query(`
+        CREATE TABLE IF NOT EXISTS poll_options (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          poll_id UUID REFERENCES polls(id) ON DELETE CASCADE,
+          title VARCHAR(500) NOT NULL,
+          description TEXT,
+          image_url TEXT,
+          votes_count INTEGER DEFAULT 0,
+          display_order INTEGER DEFAULT 0,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      
+      // Create poll votes table with unique constraint on phone per poll
+      await query(`
+        CREATE TABLE IF NOT EXISTS poll_votes (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          poll_id UUID REFERENCES polls(id) ON DELETE CASCADE,
+          option_id UUID REFERENCES poll_options(id) ON DELETE CASCADE,
+          phone_number VARCHAR(20) NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          UNIQUE(poll_id, phone_number)
+        )
+      `);
+      
+      // Create indexes
+      await query('CREATE INDEX IF NOT EXISTS idx_polls_status ON polls(status)');
+      await query('CREATE INDEX IF NOT EXISTS idx_poll_options_poll ON poll_options(poll_id)');
+      await query('CREATE INDEX IF NOT EXISTS idx_poll_votes_poll ON poll_votes(poll_id)');
+      await query('CREATE INDEX IF NOT EXISTS idx_poll_votes_phone ON poll_votes(phone_number)');
+      
+      return res.json({ success: true, message: 'Polls tables created successfully' });
+    }
+    
+    // Get all polls (public - only active)
+    if (path === '/api/polls' && method === 'GET') {
+      const { status, include_options } = req.query;
+      
+      let sql = 'SELECT * FROM polls';
+      const params: any[] = [];
+      
+      if (status === 'active') {
+        sql += ' WHERE status = $1 AND (end_date IS NULL OR end_date > NOW())';
+        params.push('active');
+      } else if (status) {
+        sql += ' WHERE status = $1';
+        params.push(status);
+      }
+      
+      sql += ' ORDER BY created_at DESC';
+      
+      const polls = await query(sql, params);
+      
+      // Optionally include options with each poll
+      if (include_options === 'true') {
+        for (const poll of polls.rows) {
+          const options = await query(
+            'SELECT * FROM poll_options WHERE poll_id = $1 ORDER BY display_order, created_at',
+            [poll.id]
+          );
+          poll.options = options.rows;
+          
+          // Calculate total votes
+          const totalVotes = options.rows.reduce((sum: number, opt: any) => sum + (opt.votes_count || 0), 0);
+          poll.total_votes = totalVotes;
+        }
+      }
+      
+      return res.json(polls.rows);
+    }
+    
+    // Get single poll with options
+    const pollMatch = path.match(/^\/api\/polls\/([a-f0-9-]+)$/);
+    if (pollMatch && method === 'GET') {
+      const pollId = pollMatch[1];
+      
+      const poll = await query('SELECT * FROM polls WHERE id = $1', [pollId]);
+      if (!poll.rows.length) return res.status(404).json({ error: 'Poll not found' });
+      
+      const options = await query(
+        'SELECT * FROM poll_options WHERE poll_id = $1 ORDER BY display_order, created_at',
+        [pollId]
+      );
+      
+      const totalVotes = options.rows.reduce((sum: number, opt: any) => sum + (opt.votes_count || 0), 0);
+      
+      return res.json({
+        ...poll.rows[0],
+        options: options.rows,
+        total_votes: totalVotes
+      });
+    }
+    
+    // Check if phone has voted
+    const checkVoteMatch = path.match(/^\/api\/polls\/([a-f0-9-]+)\/check$/);
+    if (checkVoteMatch && method === 'POST') {
+      const pollId = checkVoteMatch[1];
+      const { phone_number } = req.body;
+      
+      if (!phone_number) return res.status(400).json({ error: 'Phone number required' });
+      
+      // Normalize phone number
+      const normalizedPhone = phone_number.replace(/\D/g, '').slice(-9);
+      
+      const existing = await query(
+        'SELECT option_id FROM poll_votes WHERE poll_id = $1 AND phone_number LIKE $2',
+        [pollId, `%${normalizedPhone}`]
+      );
+      
+      return res.json({
+        has_voted: existing.rows.length > 0,
+        voted_option: existing.rows[0]?.option_id || null
+      });
+    }
+    
+    // Cast a vote
+    const voteMatch = path.match(/^\/api\/polls\/([a-f0-9-]+)\/vote$/);
+    if (voteMatch && method === 'POST') {
+      const pollId = voteMatch[1];
+      const { option_id, phone_number } = req.body;
+      
+      if (!option_id) return res.status(400).json({ error: 'Option ID required' });
+      if (!phone_number) return res.status(400).json({ error: 'Phone number required' });
+      
+      // Validate phone number format (Kenyan format: 07XX or 01XX or +254)
+      const cleanPhone = phone_number.replace(/\D/g, '');
+      if (cleanPhone.length < 9 || cleanPhone.length > 12) {
+        return res.status(400).json({ error: 'Invalid phone number format' });
+      }
+      
+      // Normalize to last 9 digits for consistency
+      const normalizedPhone = cleanPhone.slice(-9);
+      
+      // Check if poll is active
+      const poll = await query(
+        'SELECT status, end_date FROM polls WHERE id = $1',
+        [pollId]
+      );
+      if (!poll.rows.length) return res.status(404).json({ error: 'Poll not found' });
+      if (poll.rows[0].status !== 'active') {
+        return res.status(400).json({ error: 'This poll is no longer active' });
+      }
+      if (poll.rows[0].end_date && new Date(poll.rows[0].end_date) < new Date()) {
+        return res.status(400).json({ error: 'This poll has ended' });
+      }
+      
+      // Check if option exists
+      const option = await query(
+        'SELECT id FROM poll_options WHERE id = $1 AND poll_id = $2',
+        [option_id, pollId]
+      );
+      if (!option.rows.length) return res.status(404).json({ error: 'Option not found' });
+      
+      // Check if already voted (using normalized phone)
+      const existing = await query(
+        'SELECT id FROM poll_votes WHERE poll_id = $1 AND phone_number LIKE $2',
+        [pollId, `%${normalizedPhone}`]
+      );
+      if (existing.rows.length) {
+        return res.status(400).json({ error: 'You have already voted in this poll' });
+      }
+      
+      // Record vote
+      await query(
+        'INSERT INTO poll_votes (poll_id, option_id, phone_number) VALUES ($1, $2, $3)',
+        [pollId, option_id, phone_number]
+      );
+      
+      // Update vote count
+      await query(
+        'UPDATE poll_options SET votes_count = votes_count + 1 WHERE id = $1',
+        [option_id]
+      );
+      
+      // Get updated results
+      const options = await query(
+        'SELECT * FROM poll_options WHERE poll_id = $1 ORDER BY display_order, created_at',
+        [pollId]
+      );
+      const totalVotes = options.rows.reduce((sum: number, opt: any) => sum + (opt.votes_count || 0), 0);
+      
+      return res.json({
+        success: true,
+        message: 'Vote recorded successfully',
+        options: options.rows,
+        total_votes: totalVotes
+      });
+    }
+    
+    // Admin: Create poll
+    if (path === '/api/admin/polls' && method === 'POST') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const { title, description, type, end_date, show_results, allow_multiple, options } = req.body;
+      
+      if (!title) return res.status(400).json({ error: 'Title required' });
+      if (!options || !options.length) return res.status(400).json({ error: 'At least one option required' });
+      
+      // Create poll
+      const poll = await query(
+        `INSERT INTO polls (title, description, type, end_date, show_results, allow_multiple)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [title, description || null, type || 'voting', end_date || null, show_results !== false, allow_multiple || false]
+      );
+      
+      // Create options
+      for (let i = 0; i < options.length; i++) {
+        const opt = options[i];
+        await query(
+          `INSERT INTO poll_options (poll_id, title, description, image_url, display_order)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [poll.rows[0].id, opt.title, opt.description || null, opt.image_url || null, i]
+        );
+      }
+      
+      return res.json({ success: true, poll: poll.rows[0] });
+    }
+    
+    // Admin: Get all polls
+    if (path === '/api/admin/polls' && method === 'GET') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const polls = await query('SELECT * FROM polls ORDER BY created_at DESC');
+      
+      for (const poll of polls.rows) {
+        const options = await query(
+          'SELECT * FROM poll_options WHERE poll_id = $1 ORDER BY display_order',
+          [poll.id]
+        );
+        poll.options = options.rows;
+        poll.total_votes = options.rows.reduce((sum: number, opt: any) => sum + (opt.votes_count || 0), 0);
+      }
+      
+      return res.json(polls.rows);
+    }
+    
+    // Admin: Update poll
+    const adminPollMatch = path.match(/^\/api\/admin\/polls\/([a-f0-9-]+)$/);
+    if (adminPollMatch && method === 'PUT') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const pollId = adminPollMatch[1];
+      const { title, description, type, status, end_date, show_results, allow_multiple } = req.body;
+      
+      await query(
+        `UPDATE polls SET title = COALESCE($1, title), description = $2, type = COALESCE($3, type),
+         status = COALESCE($4, status), end_date = $5, show_results = COALESCE($6, show_results),
+         allow_multiple = COALESCE($7, allow_multiple), updated_at = NOW()
+         WHERE id = $8`,
+        [title, description, type, status, end_date, show_results, allow_multiple, pollId]
+      );
+      
+      return res.json({ success: true });
+    }
+    
+    // Admin: Delete poll
+    if (adminPollMatch && method === 'DELETE') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const pollId = adminPollMatch[1];
+      await query('DELETE FROM polls WHERE id = $1', [pollId]);
+      
+      return res.json({ success: true });
+    }
+    
+    // Admin: Add option to poll
+    const addOptionMatch = path.match(/^\/api\/admin\/polls\/([a-f0-9-]+)\/options$/);
+    if (addOptionMatch && method === 'POST') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const pollId = addOptionMatch[1];
+      const { title, description, image_url } = req.body;
+      
+      if (!title) return res.status(400).json({ error: 'Option title required' });
+      
+      // Get max display order
+      const maxOrder = await query(
+        'SELECT COALESCE(MAX(display_order), -1) + 1 as next_order FROM poll_options WHERE poll_id = $1',
+        [pollId]
+      );
+      
+      const option = await query(
+        `INSERT INTO poll_options (poll_id, title, description, image_url, display_order)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [pollId, title, description || null, image_url || null, maxOrder.rows[0].next_order]
+      );
+      
+      return res.json({ success: true, option: option.rows[0] });
+    }
+    
+    // Admin: Delete option
+    const deleteOptionMatch = path.match(/^\/api\/admin\/polls\/options\/([a-f0-9-]+)$/);
+    if (deleteOptionMatch && method === 'DELETE') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const optionId = deleteOptionMatch[1];
+      await query('DELETE FROM poll_options WHERE id = $1', [optionId]);
+      
+      return res.json({ success: true });
+    }
+    
+    // Admin: Get poll votes/analytics
+    const pollVotesMatch = path.match(/^\/api\/admin\/polls\/([a-f0-9-]+)\/votes$/);
+    if (pollVotesMatch && method === 'GET') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const pollId = pollVotesMatch[1];
+      
+      const votes = await query(
+        `SELECT pv.*, po.title as option_title
+         FROM poll_votes pv
+         JOIN poll_options po ON pv.option_id = po.id
+         WHERE pv.poll_id = $1
+         ORDER BY pv.created_at DESC`,
+        [pollId]
+      );
+      
+      return res.json(votes.rows);
+    }
+
     // 404
     return res.status(404).json({ error: 'Not found', path });
 
