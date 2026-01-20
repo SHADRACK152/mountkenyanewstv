@@ -74,6 +74,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ===== PUBLIC ROUTES =====
     
+    // One-time emergency fix for localhost images (uses secret key)
+    if (path === '/api/emergency-fix-images') {
+      const secretKey = 'mtkenya2025fix';
+      const providedKey = new URL(req.url || '', 'http://localhost').searchParams.get('key');
+      
+      if (providedKey !== secretKey) {
+        return res.status(401).json({ error: 'Invalid key' });
+      }
+      
+      // Use placeholder images
+      const placeholderImage = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80';
+      const placeholderAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80';
+      
+      // Update articles
+      const articlesUpdate = await query(
+        `UPDATE articles SET featured_image = $1 WHERE featured_image LIKE '%localhost%' RETURNING id, title`,
+        [placeholderImage]
+      );
+      
+      // Update authors
+      const authorsUpdate = await query(
+        `UPDATE authors SET avatar_url = $1 WHERE avatar_url LIKE '%localhost%' RETURNING id, name`,
+        [placeholderAvatar]
+      );
+      
+      return res.json({
+        success: true,
+        message: 'Fixed broken image URLs',
+        fixed: {
+          articles: articlesUpdate.rows.length,
+          authors: authorsUpdate.rows.length,
+          articlesList: articlesUpdate.rows,
+          authorsList: authorsUpdate.rows
+        }
+      });
+    }
+    
     // Fix broken image URLs (one-time fix for localhost URLs)
     if (path === '/api/fix-images' && method === 'POST') {
       if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized - admin only' });

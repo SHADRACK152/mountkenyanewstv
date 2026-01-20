@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import * as api from '../lib/api';
 import type { ArticleWithRelations, Category } from '../lib/database.types';
 import NewsCard from '../components/NewsCard';
-import { Mail, TrendingUp, Clock, ChevronRight, ChevronLeft, Newspaper, Users, Globe, Award, Eye } from 'lucide-react';
+import { Mail, TrendingUp, Clock, ChevronRight, ChevronLeft, Newspaper, Users, Globe, Award } from 'lucide-react';
 
 export default function Home() {
   const [featuredArticles, setFeaturedArticles] = useState<ArticleWithRelations[]>([]);
@@ -108,31 +108,30 @@ export default function Home() {
                   className="w-full h-full object-cover object-top"
                 />
                 
-                {/* Gradient Overlay - lighter to show more image */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                {/* Gradient Overlay - bottom only for clean look */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 
-                {/* Content */}
+                {/* Content - Simple and clean */}
                 <div className="absolute inset-0 flex items-end">
-                  <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
+                  <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 md:pb-16">
                     <div className="max-w-3xl">
-                      {/* Breaking Badge */}
-                      {article.is_breaking && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-3 animate-pulse">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                          Breaking
-                        </div>
-                      )}
+                      {/* Category Badge */}
+                      <div className="flex items-center gap-2 mb-4">
+                        {article.is_breaking && (
+                          <span className="px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase rounded animate-pulse">
+                            Breaking
+                          </span>
+                        )}
+                        <a 
+                          href={`#category/${article.categories.slug}`}
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase rounded transition-all"
+                        >
+                          {article.categories.name}
+                        </a>
+                      </div>
                       
-                      {/* Category */}
-                      <a 
-                        href={`#category/${article.categories.slug}`}
-                        className="inline-block px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-3 shadow-lg transition-all"
-                      >
-                        {article.categories.name}
-                      </a>
-                      
-                      {/* Title */}
-                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 leading-tight">
+                      {/* Title Only - Clean and Bold */}
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight drop-shadow-lg">
                         <a 
                           href={`#article/${article.slug}`}
                           className="hover:text-blue-200 transition-colors"
@@ -140,43 +139,6 @@ export default function Home() {
                           {article.title}
                         </a>
                       </h1>
-                      
-                      {/* Excerpt - hidden on mobile for compact view */}
-                      <p className="hidden sm:block text-base md:text-lg text-gray-200 mb-4 line-clamp-2 max-w-2xl">
-                        {article.excerpt}
-                      </p>
-                      
-                      {/* Meta Info */}
-                      <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={article.authors.avatar_url}
-                            alt={article.authors.name}
-                            className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white/50"
-                          />
-                          <span className="font-semibold text-white">{article.authors.name}</span>
-                        </div>
-                        <span className="hidden md:inline text-gray-400">•</span>
-                        <span className="hidden sm:inline">{formatHeroDate(article.published_at)}</span>
-                        <span className="hidden md:inline text-gray-400">•</span>
-                        <div className="flex items-center gap-1">
-                          <Clock size={14} />
-                          <span>{article.reading_time} min</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Eye size={14} />
-                          <span>{article.views?.toLocaleString() || 0}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Read More Button */}
-                      <a
-                        href={`#article/${article.slug}`}
-                        className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
-                      >
-                        Read Full Story
-                        <ChevronRight size={18} />
-                      </a>
                     </div>
                   </div>
                 </div>
