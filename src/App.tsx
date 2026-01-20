@@ -80,6 +80,17 @@ function App() {
   const [route, setRoute] = useState<RouteState>({ page: 'home' });
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
+  // Handle redirect from short links (query parameter approach)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gotoPath = urlParams.get('goto');
+    if (gotoPath) {
+      // Clear the query parameter and set the hash
+      window.history.replaceState({}, '', window.location.pathname);
+      window.location.hash = gotoPath;
+    }
+  }, []);
+
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1);

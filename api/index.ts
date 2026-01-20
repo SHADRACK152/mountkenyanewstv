@@ -94,7 +94,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       const article = result.rows[0];
-      const fullUrl = `https://www.mtkenyanews.com/#article/${article.slug}`;
+      const hashPath = `article/${article.slug}`;
+      const redirectUrl = `https://www.mtkenyanews.com/?goto=${encodeURIComponent(hashPath)}`;
+      const displayUrl = `https://www.mtkenyanews.com/#${hashPath}`;
       
       // Track click
       await query('UPDATE short_links SET clicks = clicks + 1 WHERE code = $1', [code]);
@@ -123,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="article">
-  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:url" content="${displayUrl}">
   <meta property="og:title" content="${escapeHtml(article.title)}">
   <meta property="og:description" content="${escapeHtml(article.excerpt || '')}">
   <meta property="og:image" content="${article.featured_image}">
@@ -133,7 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${fullUrl}">
+  <meta name="twitter:url" content="${displayUrl}">
   <meta name="twitter:title" content="${escapeHtml(article.title)}">
   <meta name="twitter:description" content="${escapeHtml(article.excerpt || '')}">
   <meta name="twitter:image" content="${article.featured_image}">
@@ -141,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <!-- WhatsApp specific -->
   <meta property="og:image:alt" content="${escapeHtml(article.title)}">
   
-  <link rel="canonical" href="${fullUrl}">
+  <link rel="canonical" href="${displayUrl}">
 </head>
 <body></body>
 </html>`;
@@ -150,22 +152,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour for crawlers
         return res.status(200).send(html);
       } else {
-        // Regular user - redirect with multiple fallbacks for mobile browsers
-        const redirectHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=${fullUrl}">
-  <script>window.location.replace("${fullUrl}");</script>
-  <title>Redirecting...</title>
-</head>
-<body>
-  <p>Redirecting to article... <a href="${fullUrl}">Click here</a> if not redirected.</p>
-</body>
-</html>`;
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        // Regular user - use HTTP 302 redirect to query param URL (no hash)
+        res.setHeader('Location', redirectUrl);
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return res.status(200).send(redirectHtml);
+        return res.status(302).end();
       }
     }
     
@@ -188,7 +178,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       const poll = result.rows[0];
-      const fullUrl = `https://www.mtkenyanews.com/#poll/${poll.id}`;
+      const hashPath = `poll/${poll.id}`;
+      const redirectUrl = `https://www.mtkenyanews.com/?goto=${encodeURIComponent(hashPath)}`;
+      const displayUrl = `https://www.mtkenyanews.com/#${hashPath}`;
       
       // Track click
       await query('UPDATE poll_links SET clicks = clicks + 1 WHERE code = $1', [code]);
@@ -217,7 +209,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:url" content="${displayUrl}">
   <meta property="og:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta property="og:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
   <meta property="og:image" content="https://www.mtkenyanews.com/mtker.png">
@@ -227,12 +219,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${fullUrl}">
+  <meta name="twitter:url" content="${displayUrl}">
   <meta name="twitter:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta name="twitter:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
   <meta name="twitter:image" content="https://www.mtkenyanews.com/mtker.png">
   
-  <link rel="canonical" href="${fullUrl}">
+  <link rel="canonical" href="${displayUrl}">
 </head>
 <body></body>
 </html>`;
@@ -241,22 +233,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.setHeader('Cache-Control', 'public, max-age=3600');
         return res.status(200).send(html);
       } else {
-        // Regular user - redirect with multiple fallbacks
-        const redirectHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=${fullUrl}">
-  <script>window.location.replace("${fullUrl}");</script>
-  <title>Redirecting...</title>
-</head>
-<body>
-  <p>Redirecting to poll... <a href="${fullUrl}">Click here</a> if not redirected.</p>
-</body>
-</html>`;
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        // Regular user - use HTTP 302 redirect to query param URL (no hash)
+        res.setHeader('Location', redirectUrl);
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return res.status(200).send(redirectHtml);
+        return res.status(302).end();
       }
     }
     
