@@ -74,6 +74,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ===== PUBLIC ROUTES =====
     
+    // Setup short_links table (one-time setup)
+    if (path === '/api/setup-short-links') {
+      const secretKey = 'mtkenya2025fix';
+      const providedKey = new URL(req.url || '', 'http://localhost').searchParams.get('key');
+      
+      if (providedKey !== secretKey) {
+        return res.status(401).json({ error: 'Invalid key' });
+      }
+      
+      // Create short_links table
+      await query(`
+        CREATE TABLE IF NOT EXISTS short_links (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          code VARCHAR(10) UNIQUE NOT NULL,
+          article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+          clicks INTEGER DEFAULT 0,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+      `);
+      
+      // Create index for fast lookups
+      await query(`CREATE INDEX IF NOT EXISTS idx_short_links_code ON short_links(code)`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_short_links_article ON short_links(article_id)`);
+      
+      return res.json({
+        success: true,
+        message: 'short_links table created successfully'
+      });
+    }
+    
     // Fix malformed slugs (one-time fix)
     if (path === '/api/fix-slugs') {
       const secretKey = 'mtkenya2025fix';
@@ -610,6 +640,182 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (delSubMatch && method === 'DELETE') {
       await query('DELETE FROM subscribers WHERE id=$1', [delSubMatch[1]]);
       return res.json({ ok: true });
+    }
+
+    // ===== SHORT LINKS SYSTEM =====
+    
+    // Generate short code
+    function generateShortCode(length = 7): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+    
+    // Create short link for an article
+    if (path === '/api/short-links' && method === 'POST') {
+      const { article_id } = req.body || {};
+      if (!article_id) return res.status(400).json({ error: 'article_id required' });
+      
+      // Check if article exists
+      const article = await query(
+        `SELECT a.id, a.title, a.slug, a.excerpt, a.featured_image FROM articles a WHERE a.id = $1`,
+        [article_id]
+      );
+      if (!article.rows.length) return res.status(404).json({ error: 'Article not found' });
+      
+      // Check if short link already exists for this article
+      const existing = await query('SELECT code FROM short_links WHERE article_id = $1', [article_id]);
+      if (existing.rows.length) {
+        return res.json({ 
+          code: existing.rows[0].code,
+          short_url: `https://mtkenyanews.com/s/${existing.rows[0].code}`,
+          created: false
+        });
+      }
+      
+      // Generate unique short code
+      let code = generateShortCode();
+      let attempts = 0;
+      while (attempts < 10) {
+        const exists = await query('SELECT 1 FROM short_links WHERE code = $1', [code]);
+        if (!exists.rows.length) break;
+        code = generateShortCode();
+        attempts++;
+      }
+      
+      // Create short link
+      await query(
+        'INSERT INTO short_links (code, article_id) VALUES ($1, $2)',
+        [code, article_id]
+      );
+      
+      return res.json({
+        code,
+        short_url: `https://mtkenyanews.com/s/${code}`,
+        created: true
+      });
+    }
+    
+    // Get short link info
+    if (path === '/api/short-links' && method === 'GET') {
+      const { article_id } = req.query;
+      if (!article_id) return res.status(400).json({ error: 'article_id required' });
+      
+      const result = await query('SELECT code FROM short_links WHERE article_id = $1', [article_id]);
+      if (!result.rows.length) {
+        return res.json({ exists: false });
+      }
+      
+      return res.json({
+        exists: true,
+        code: result.rows[0].code,
+        short_url: `https://mtkenyanews.com/s/${result.rows[0].code}`
+      });
+    }
+    
+    // Resolve short link - serves HTML with Open Graph meta for social media crawlers
+    const shortLinkMatch = path.match(/^\/s\/([A-Za-z0-9]+)$/);
+    if (shortLinkMatch) {
+      const code = shortLinkMatch[1];
+      
+      // Find the article
+      const result = await query(
+        `SELECT a.id, a.title, a.slug, a.excerpt, a.featured_image, c.name as category_name
+         FROM short_links sl
+         JOIN articles a ON sl.article_id = a.id
+         JOIN categories c ON a.category_id = c.id
+         WHERE sl.code = $1`,
+        [code]
+      );
+      
+      if (!result.rows.length) {
+        return res.status(404).json({ error: 'Short link not found' });
+      }
+      
+      const article = result.rows[0];
+      const fullUrl = `https://mtkenyanews.com/#article/${article.slug}`;
+      
+      // Track click
+      await query('UPDATE short_links SET clicks = clicks + 1 WHERE code = $1', [code]);
+      
+      // Check if it's a social media crawler (bot)
+      const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|googlebot|bingbot/i.test(userAgent);
+      
+      if (isCrawler) {
+        // Serve HTML with Open Graph meta tags for crawlers
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(article.title)} - MT Kenya News</title>
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:title" content="${escapeHtml(article.title)}">
+  <meta property="og:description" content="${escapeHtml(article.excerpt || '')}">
+  <meta property="og:image" content="${article.featured_image}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="MT Kenya News">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${fullUrl}">
+  <meta name="twitter:title" content="${escapeHtml(article.title)}">
+  <meta name="twitter:description" content="${escapeHtml(article.excerpt || '')}">
+  <meta name="twitter:image" content="${article.featured_image}">
+  
+  <!-- WhatsApp -->
+  <meta property="og:image:alt" content="${escapeHtml(article.title)}">
+  
+  <meta http-equiv="refresh" content="0;url=${fullUrl}">
+</head>
+<body>
+  <p>Redirecting to <a href="${fullUrl}">${escapeHtml(article.title)}</a>...</p>
+</body>
+</html>`;
+        
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.status(200).send(html);
+      } else {
+        // Regular user - redirect immediately
+        res.setHeader('Location', fullUrl);
+        return res.status(302).end();
+      }
+    }
+    
+    // Helper function to escape HTML
+    function escapeHtml(text: string): string {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    // Create short_links table if needed
+    if (path === '/api/init-short-links' && req.query.key === 'mtkenya2025fix') {
+      await query(`
+        CREATE TABLE IF NOT EXISTS short_links (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          code VARCHAR(10) UNIQUE NOT NULL,
+          article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+          clicks INTEGER DEFAULT 0,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      await query('CREATE INDEX IF NOT EXISTS idx_short_links_code ON short_links(code)');
+      await query('CREATE INDEX IF NOT EXISTS idx_short_links_article ON short_links(article_id)');
+      
+      return res.json({ success: true, message: 'Short links table created' });
     }
 
     // 404

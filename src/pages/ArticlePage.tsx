@@ -28,6 +28,8 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   const [commentStatus, setCommentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [shortUrl, setShortUrl] = useState<string | null>(null);
+  const [isLoadingShortUrl, setIsLoadingShortUrl] = useState(false);
 
   const subscriberEmail = localStorage.getItem('subscriber_email');
   const isSubscribed = !!subscriberEmail;
@@ -54,6 +56,39 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
 
       // Fetch likes
       fetchLikes(article.id);
+      
+      // Get or create short link
+      fetchShortUrl(article.id);
+    }
+  };
+
+  const fetchShortUrl = async (articleId: string) => {
+    setIsLoadingShortUrl(true);
+    try {
+      // First check if short link exists
+      const checkRes = await fetch(`${API}/api/short-links?article_id=${articleId}`);
+      const checkData = await checkRes.json();
+      
+      if (checkData.exists) {
+        setShortUrl(checkData.short_url);
+      } else {
+        // Create new short link
+        const createRes = await fetch(`${API}/api/short-links`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ article_id: articleId }),
+        });
+        const createData = await createRes.json();
+        if (createData.short_url) {
+          setShortUrl(createData.short_url);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to get short URL:', err);
+      // Fallback to regular URL
+      setShortUrl(null);
+    } finally {
+      setIsLoadingShortUrl(false);
     }
   };
 
@@ -145,32 +180,34 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
     }
   };
 
+  const getShareUrl = () => shortUrl || window.location.href;
+
   const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
   };
 
   const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
   };
 
   const shareByEmail = () => {
-    window.location.href = `mailto:?subject=${encodeURIComponent(article?.title || '')}&body=${encodeURIComponent(window.location.href)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(article?.title || '')}&body=${encodeURIComponent(getShareUrl())}`;
   };
 
   const shareOnWhatsApp = () => {
-    const text = `${article?.title || ''}\n\nRead more: ${window.location.href}`;
+    const text = `${article?.title || ''}\n\nRead more: ${getShareUrl()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(getShareUrl());
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
-      textArea.value = window.location.href;
+      textArea.value = getShareUrl();
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
@@ -181,8 +218,8 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   };
 
   const getShortUrl = () => {
-    // Return a clean short URL format
-    return `https://mtkenyanews.com/#article/${articleSlug}`;
+    // Return the short URL if available, otherwise fallback
+    return shortUrl || `https://mtkenyanews.com/#article/${articleSlug}`;
   };
 
   if (!article) {
@@ -354,19 +391,24 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                   
                   {/* Short URL display */}
                   <div className="mt-4 flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                    <Link2 size={16} className="text-gray-400" />
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={getShortUrl()} 
-                      className="flex-1 bg-transparent text-sm text-gray-600 outline-none"
-                    />
+                    <Link2 size={16} className="text-gray-400 flex-shrink-0" />
+                    {isLoadingShortUrl ? (
+                      <span className="flex-1 text-sm text-gray-400">Generating short link...</span>
+                    ) : (
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={getShortUrl()} 
+                        className="flex-1 bg-transparent text-sm text-gray-600 outline-none font-mono"
+                      />
+                    )}
                     <button 
                       onClick={copyLink}
+                      disabled={isLoadingShortUrl}
                       className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
                         linkCopied 
                           ? 'bg-green-500 text-white' 
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
                       }`}
                     >
                       {linkCopied ? 'Copied!' : 'Copy'}
