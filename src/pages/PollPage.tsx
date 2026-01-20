@@ -169,18 +169,30 @@ export default function PollPage({ pollId }: PollPageProps) {
     }
   };
 
-  const getShareUrl = () => shortUrl || `https://www.mtkenyanews.com/#poll/${pollId}`;
+  // Always prefer short URL for sharing (it has OG tags for previews)
+  const getShareUrl = () => {
+    // If short URL is available, use it (better for social media previews)
+    if (shortUrl) return shortUrl;
+    // Fallback to direct URL (won't show previews on social media)
+    return `https://www.mtkenyanews.com/#poll/${pollId}`;
+  };
 
   const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
+    const url = getShareUrl();
+    // Use Facebook's sharer with quote parameter for better sharing
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(`🗳️ ${poll?.title || ''} - Vote Now!`)}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
   };
 
   const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(`Vote now: ${poll?.title || ''}`)}`, '_blank');
+    const url = getShareUrl();
+    const text = `🗳️ Vote now: ${poll?.title || ''}`;
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}&via=mtkenyanews`, '_blank', 'width=600,height=400');
   };
 
   const shareOnWhatsApp = () => {
-    const text = `🗳️ ${poll?.title || ''}\n\nVote now: ${getShareUrl()}`;
+    const url = getShareUrl();
+    const text = `🗳️ *${poll?.title || ''}*\n\n${poll?.description || 'Cast your vote now!'}\n\n👉 Vote here: ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 

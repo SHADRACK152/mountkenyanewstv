@@ -113,28 +113,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // Serve a full HTML page with OG tags AND JavaScript redirect
       // This works for both crawlers (they read OG tags) and users (JS redirects them)
+      const imageUrl = article.featured_image || 'https://www.mtkenyanews.com/mtker.png';
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(article.title)} - MT Kenya News</title>
+  <meta name="description" content="${escapeHtml(article.excerpt || 'Read more on MT Kenya News')}">
   
-  <!-- Open Graph / Facebook / WhatsApp -->
+  <!-- Open Graph / Facebook / WhatsApp / Instagram -->
   <meta property="og:type" content="article">
   <meta property="og:url" content="${targetUrl}">
   <meta property="og:title" content="${escapeHtml(article.title)}">
   <meta property="og:description" content="${escapeHtml(article.excerpt || 'Read more on MT Kenya News')}">
-  <meta property="og:image" content="${article.featured_image || 'https://www.mtkenyanews.com/mtker.png'}">
+  <meta property="og:image" content="${imageUrl}">
+  <meta property="og:image:secure_url" content="${imageUrl}">
+  <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${escapeHtml(article.title)}">
   <meta property="og:site_name" content="MT Kenya News">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="${new Date().toISOString()}">
+  <meta property="article:section" content="${escapeHtml(article.category_name || 'News')}">
   
-  <!-- Twitter -->
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mtkenyanews">
+  <meta name="twitter:creator" content="@mtkenyanews">
   <meta name="twitter:title" content="${escapeHtml(article.title)}">
   <meta name="twitter:description" content="${escapeHtml(article.excerpt || 'Read more on MT Kenya News')}">
-  <meta name="twitter:image" content="${article.featured_image || 'https://www.mtkenyanews.com/mtker.png'}">
+  <meta name="twitter:image" content="${imageUrl}">
+  <meta name="twitter:image:alt" content="${escapeHtml(article.title)}">
   
   <link rel="canonical" href="${targetUrl}">
   
@@ -205,28 +216,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       // Serve a full HTML page with OG tags AND JavaScript redirect
+      const pollImageUrl = 'https://www.mtkenyanews.com/mtker.png';
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(poll.title)} - Vote Now | MT Kenya News</title>
+  <meta name="description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
   
-  <!-- Open Graph / Facebook / WhatsApp -->
+  <!-- Open Graph / Facebook / WhatsApp / Instagram -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="${targetUrl}">
   <meta property="og:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta property="og:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
-  <meta property="og:image" content="https://www.mtkenyanews.com/mtker.png">
+  <meta property="og:image" content="${pollImageUrl}">
+  <meta property="og:image:secure_url" content="${pollImageUrl}">
+  <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Vote Now - ${escapeHtml(poll.title)}">
   <meta property="og:site_name" content="MT Kenya News">
+  <meta property="og:locale" content="en_US">
   
-  <!-- Twitter -->
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mtkenyanews">
+  <meta name="twitter:creator" content="@mtkenyanews">
   <meta name="twitter:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta name="twitter:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
-  <meta name="twitter:image" content="https://www.mtkenyanews.com/mtker.png">
+  <meta name="twitter:image" content="${pollImageUrl}">
+  <meta name="twitter:image:alt" content="Vote Now - ${escapeHtml(poll.title)}">
   
   <link rel="canonical" href="${targetUrl}">
   

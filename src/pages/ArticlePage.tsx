@@ -180,22 +180,31 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
     }
   };
 
-  const getShareUrl = () => shortUrl || window.location.href;
+  // Always prefer short URL for sharing (it has OG tags for previews)
+  const getShareUrl = () => {
+    if (shortUrl) return shortUrl;
+    return `https://www.mtkenyanews.com/#article/${articleSlug}`;
+  };
 
   const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
+    const url = getShareUrl();
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(article?.title || '')}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
   };
 
   const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+    const url = getShareUrl();
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(article?.title || '')}&via=mtkenyanews`, '_blank', 'width=600,height=400');
   };
 
   const shareByEmail = () => {
-    window.location.href = `mailto:?subject=${encodeURIComponent(article?.title || '')}&body=${encodeURIComponent(getShareUrl())}`;
+    const url = getShareUrl();
+    window.location.href = `mailto:?subject=${encodeURIComponent(article?.title || '')}&body=${encodeURIComponent(`Read this article:\n\n${article?.title}\n\n${url}`)}`;
   };
 
   const shareOnWhatsApp = () => {
-    const text = `${article?.title || ''}\n\nRead more: ${getShareUrl()}`;
+    const url = getShareUrl();
+    const text = `📰 *${article?.title || ''}*\n\n${article?.excerpt || ''}\n\n👉 Read more: ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -215,11 +224,6 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     }
-  };
-
-  const getShortUrl = () => {
-    // Return the short URL if available, otherwise fallback
-    return shortUrl || `https://mtkenyanews.com/#article/${articleSlug}`;
   };
 
   if (!article) {
