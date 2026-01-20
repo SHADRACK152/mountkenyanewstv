@@ -4,7 +4,8 @@ import * as api from '../lib/api';
 import type { ArticleWithRelations } from '../lib/database.types';
 import NewsCard from '../components/NewsCard';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// Use relative URL in production (same origin), or localhost for development
+const API = import.meta.env.VITE_API_URL || '';
 
 interface Comment {
   id: string;
