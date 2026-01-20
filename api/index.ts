@@ -68,8 +68,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Get the original path (Vercel provides this in x-vercel-forwarded-for or we can parse from referrer/original URL)
-  const originalUrl = (req.headers['x-vercel-original-url'] as string) || req.url || '';
+  // Get the original path - Vercel uses x-matched-path for the original URL pattern
+  // x-vercel-sc-headers or x-invoke-path may also contain the original path
+  const matchedPath = req.headers['x-matched-path'] as string;
+  const invokePath = req.headers['x-invoke-path'] as string;
+  const originalUrl = matchedPath || invokePath || req.url || '';
   const path = originalUrl.split('?')[0];
   const method = req.method || 'GET';
 
