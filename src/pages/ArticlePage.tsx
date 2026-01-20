@@ -188,8 +188,10 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
 
   const shareOnFacebook = () => {
     const url = getShareUrl();
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(article?.title || '')}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    // Use Facebook's dialog/share which properly shows OG tags
+    // Note: Facebook doesn't allow pre-filling text - it reads from OG meta tags
+    const shareUrl = `https://www.facebook.com/dialog/share?app_id=966242223397117&href=${encodeURIComponent(url)}&display=popup&redirect_uri=${encodeURIComponent('https://www.mtkenyanews.com/')}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
   };
 
   const shareOnTwitter = () => {

@@ -179,9 +179,9 @@ export default function PollPage({ pollId }: PollPageProps) {
 
   const shareOnFacebook = () => {
     const url = getShareUrl();
-    // Use Facebook's sharer with quote parameter for better sharing
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(`🗳️ ${poll?.title || ''} - Vote Now!`)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    // Use Facebook's dialog/share which properly shows OG tags from short link
+    const shareUrl = `https://www.facebook.com/dialog/share?app_id=966242223397117&href=${encodeURIComponent(url)}&display=popup&redirect_uri=${encodeURIComponent('https://www.mtkenyanews.com/')}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
   };
 
   const shareOnTwitter = () => {
