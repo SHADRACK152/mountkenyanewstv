@@ -87,10 +87,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const placeholderImage = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80';
       const placeholderAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80';
       
-      // Update articles
+      // Update article featured images
       const articlesUpdate = await query(
         `UPDATE articles SET featured_image = $1 WHERE featured_image LIKE '%localhost%' RETURNING id, title`,
         [placeholderImage]
+      );
+      
+      // Update localhost URLs inside article content
+      const contentUpdate = await query(
+        `UPDATE articles SET content = REPLACE(content, 'http://localhost:4000/uploads/', $1) WHERE content LIKE '%localhost%' RETURNING id, title`,
+        [placeholderImage.replace('?w=800&q=80', '/')]
       );
       
       // Update authors
@@ -103,10 +109,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         message: 'Fixed broken image URLs',
         fixed: {
-          articles: articlesUpdate.rows.length,
+          featuredImages: articlesUpdate.rows.length,
+          contentImages: contentUpdate.rows.length,
           authors: authorsUpdate.rows.length,
-          articlesList: articlesUpdate.rows,
-          authorsList: authorsUpdate.rows
+          details: {
+            featuredArticles: articlesUpdate.rows,
+            contentArticles: contentUpdate.rows,
+            authors: authorsUpdate.rows
+          }
         }
       });
     }
