@@ -150,10 +150,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour for crawlers
         return res.status(200).send(html);
       } else {
-        // Regular user - instant JavaScript redirect (HTTP 302 doesn't work with hash URLs)
-        const redirectHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><script>window.location.replace("${fullUrl}");</script></head><body></body></html>`;
+        // Regular user - redirect with multiple fallbacks for mobile browsers
+        const redirectHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=${fullUrl}">
+  <script>window.location.replace("${fullUrl}");</script>
+  <title>Redirecting...</title>
+</head>
+<body>
+  <p>Redirecting to article... <a href="${fullUrl}">Click here</a> if not redirected.</p>
+</body>
+</html>`;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         return res.status(200).send(redirectHtml);
       }
     }
@@ -623,9 +634,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (method === 'POST') {
         const a = req.body;
+        // Ensure slug is properly formatted (sanitize server-side)
+        const sanitizedSlug = (a.slug || a.title || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+          .substring(0, 100);
+        
         const r = await query(
           'INSERT INTO articles (title,slug,excerpt,content,featured_image,category_id,author_id,published_at,reading_time,is_featured,is_breaking) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',
-          [a.title, a.slug, a.excerpt, a.content, a.featured_image, a.category_id, a.author_id, a.published_at, a.reading_time || 0, a.is_featured || false, a.is_breaking || false]
+          [a.title, sanitizedSlug, a.excerpt, a.content, a.featured_image, a.category_id, a.author_id, a.published_at, a.reading_time || 0, a.is_featured || false, a.is_breaking || false]
         );
         return res.json(r.rows[0]);
       }
@@ -641,6 +661,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (method === 'PUT') {
         const a = req.body;
+        // Sanitize slug if provided
+        if (a.slug) {
+          a.slug = a.slug
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '')
+            .substring(0, 100);
+        }
         const sets: string[] = [];
         const vals: any[] = [];
         ['title','slug','excerpt','content','featured_image','category_id','author_id','published_at','reading_time','is_featured','is_breaking'].forEach(k => {

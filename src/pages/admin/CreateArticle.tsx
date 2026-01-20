@@ -81,10 +81,11 @@ export default function CreateArticle() {
     setTitle(value);
     const generatedSlug = value
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-')          // Replace spaces with dashes
+      .replace(/-+/g, '-')           // Replace multiple dashes with single
+      .replace(/^-|-$/g, '')         // Remove leading/trailing dashes
+      .substring(0, 100);            // Limit length
     setSlug(generatedSlug);
   };
 
