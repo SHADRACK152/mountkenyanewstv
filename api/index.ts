@@ -100,6 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const article = result.rows[0];
       const targetUrl = `https://www.mtkenyanews.com/#article/${article.slug}`;
+      const shortLinkUrl = `https://www.mtkenyanews.com/s/${code}`;
       
       // Track click
       await query('UPDATE short_links SET clicks = clicks + 1 WHERE code = $1', [code]);
@@ -127,7 +128,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Open Graph / Facebook / WhatsApp / Instagram -->
   <meta property="og:type" content="article">
-  <meta property="og:url" content="${targetUrl}">
+  <meta property="og:url" content="${shortLinkUrl}">
   <meta property="og:title" content="${escapeHtml(article.title)}">
   <meta property="og:description" content="${escapeHtml(article.excerpt || 'Read more on MT Kenya News')}">
   <meta property="og:image" content="${imageUrl}">
@@ -150,7 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta name="twitter:image" content="${imageUrl}">
   <meta name="twitter:image:alt" content="${escapeHtml(article.title)}">
   
-  <link rel="canonical" href="${targetUrl}">
+  <link rel="canonical" href="${shortLinkUrl}">
   
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); }
@@ -203,6 +204,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const poll = result.rows[0];
       const targetUrl = `https://www.mtkenyanews.com/#poll/${poll.id}`;
+      const pollShortUrl = `https://www.mtkenyanews.com/p/${code}`;
       
       // Track click
       await query('UPDATE poll_links SET clicks = clicks + 1 WHERE code = $1', [code]);
@@ -229,7 +231,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- Open Graph / Facebook / WhatsApp / Instagram -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${targetUrl}">
+  <meta property="og:url" content="${pollShortUrl}">
   <meta property="og:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta property="og:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
   <meta property="og:image" content="${pollImageUrl}">
@@ -250,7 +252,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta name="twitter:image" content="${pollImageUrl}">
   <meta name="twitter:image:alt" content="Vote Now - ${escapeHtml(poll.title)}">
   
-  <link rel="canonical" href="${targetUrl}">
+  <link rel="canonical" href="${pollShortUrl}">
   
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); }
