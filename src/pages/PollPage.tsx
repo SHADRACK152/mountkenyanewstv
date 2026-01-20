@@ -169,7 +169,7 @@ export default function PollPage({ pollId }: PollPageProps) {
     }
   };
 
-  const getShareUrl = () => shortUrl || `https://mtkenyanews.com/#poll/${pollId}`;
+  const getShareUrl = () => shortUrl || `https://www.mtkenyanews.com/#poll/${pollId}`;
 
   const shareOnFacebook = () => {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
@@ -445,7 +445,7 @@ export default function PollPage({ pollId }: PollPageProps) {
                 <input 
                   type="text" 
                   readOnly 
-                  value={shortUrl || `mtkenyanews.com/#poll/${pollId}`}
+                  value={shortUrl || `www.mtkenyanews.com/#poll/${pollId}`}
                   className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 font-mono"
                 />
               </div>

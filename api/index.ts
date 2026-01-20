@@ -94,7 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       const article = result.rows[0];
-      const fullUrl = `https://mtkenyanews.com/#article/${article.slug}`;
+      const fullUrl = `https://www.mtkenyanews.com/#article/${article.slug}`;
       
       // Track click
       await query('UPDATE short_links SET clicks = clicks + 1 WHERE code = $1', [code]);
@@ -188,7 +188,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       const poll = result.rows[0];
-      const fullUrl = `https://mtkenyanews.com/#poll/${poll.id}`;
+      const fullUrl = `https://www.mtkenyanews.com/#poll/${poll.id}`;
       
       // Track click
       await query('UPDATE poll_links SET clicks = clicks + 1 WHERE code = $1', [code]);
@@ -220,7 +220,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta property="og:url" content="${fullUrl}">
   <meta property="og:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta property="og:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
-  <meta property="og:image" content="https://mtkenyanews.com/mtker.png">
+  <meta property="og:image" content="https://www.mtkenyanews.com/mtker.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="MT Kenya News">
@@ -230,7 +230,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta name="twitter:url" content="${fullUrl}">
   <meta name="twitter:title" content="🗳️ ${escapeHtml(poll.title)}">
   <meta name="twitter:description" content="${escapeHtml(poll.description || 'Cast your vote now on MT Kenya News!')}">
-  <meta name="twitter:image" content="https://mtkenyanews.com/mtker.png">
+  <meta name="twitter:image" content="https://www.mtkenyanews.com/mtker.png">
   
   <link rel="canonical" href="${fullUrl}">
 </head>
@@ -878,7 +878,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (existing.rows.length) {
         return res.json({ 
           code: existing.rows[0].code,
-          short_url: `https://mtkenyanews.com/s/${existing.rows[0].code}`,
+          short_url: `https://www.mtkenyanews.com/s/${existing.rows[0].code}`,
           created: false
         });
       }
@@ -901,7 +901,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       return res.json({
         code,
-        short_url: `https://mtkenyanews.com/s/${code}`,
+        short_url: `https://www.mtkenyanews.com/s/${code}`,
         created: true
       });
     }
@@ -919,7 +919,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({
         exists: true,
         code: result.rows[0].code,
-        short_url: `https://mtkenyanews.com/s/${result.rows[0].code}`
+        short_url: `https://www.mtkenyanews.com/s/${result.rows[0].code}`
       });
     }
     
@@ -973,7 +973,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (existing.rows.length) {
         return res.json({ 
           code: existing.rows[0].code,
-          short_url: `https://mtkenyanews.com/p/${existing.rows[0].code}`,
+          short_url: `https://www.mtkenyanews.com/p/${existing.rows[0].code}`,
           created: false
         });
       }
@@ -996,7 +996,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       return res.json({
         code,
-        short_url: `https://mtkenyanews.com/p/${code}`,
+        short_url: `https://www.mtkenyanews.com/p/${code}`,
         created: true
       });
     }
@@ -1014,7 +1014,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({
         exists: true,
         code: result.rows[0].code,
-        short_url: `https://mtkenyanews.com/p/${result.rows[0].code}`
+        short_url: `https://www.mtkenyanews.com/p/${result.rows[0].code}`
       });
     }
 
