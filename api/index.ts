@@ -74,6 +74,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ===== PUBLIC ROUTES =====
     
+    // Fix broken image URLs (one-time fix for localhost URLs)
+    if (path === '/api/fix-images' && method === 'POST') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized - admin only' });
+      
+      // Find all articles with localhost image URLs
+      const articlesResult = await query(
+        `SELECT id, title, featured_image FROM articles WHERE featured_image LIKE '%localhost%'`
+      );
+      
+      // Find all authors with localhost avatar URLs
+      const authorsResult = await query(
+        `SELECT id, name, avatar_url FROM authors WHERE avatar_url LIKE '%localhost%'`
+      );
+      
+      const issues = {
+        articles: articlesResult.rows.map(a => ({ id: a.id, title: a.title, image: a.featured_image })),
+        authors: authorsResult.rows.map(a => ({ id: a.id, name: a.name, avatar: a.avatar_url })),
+      };
+      
+      return res.json({
+        message: 'Found broken image URLs that need to be re-uploaded',
+        count: {
+          articles: articlesResult.rows.length,
+          authors: authorsResult.rows.length
+        },
+        issues,
+        fix: 'Please edit each article/author in the admin panel and re-upload the images. They will now be stored in Cloudinary.'
+      });
+    }
+    
+    // Auto-fix broken localhost images with a placeholder
+    if (path === '/api/fix-images-auto' && method === 'POST') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized - admin only' });
+      
+      // Use a nice placeholder image
+      const placeholderImage = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80';
+      const placeholderAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80';
+      
+      // Update articles with localhost images
+      const articlesUpdate = await query(
+        `UPDATE articles SET featured_image = $1 WHERE featured_image LIKE '%localhost%' RETURNING id, title`,
+        [placeholderImage]
+      );
+      
+      // Update authors with localhost avatars
+      const authorsUpdate = await query(
+        `UPDATE authors SET avatar_url = $1 WHERE avatar_url LIKE '%localhost%' RETURNING id, name`,
+        [placeholderAvatar]
+      );
+      
+      return res.json({
+        message: 'Fixed broken image URLs with placeholder images',
+        fixed: {
+          articles: articlesUpdate.rows,
+          authors: authorsUpdate.rows
+        },
+        note: 'You can now edit each article/author to upload proper images via Cloudinary.'
+      });
+    }
+    
     // Test Cloudinary connection
     if (path === '/api/test-cloudinary') {
       const config = {
