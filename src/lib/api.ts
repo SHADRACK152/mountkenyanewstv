@@ -160,11 +160,29 @@ export async function getArticlesByCategory(categoryId: string, limit = 3) {
 
 // Upload helpers
 export async function uploadFile(file: File) {
-  const form = new FormData();
-  form.append('file', file);
-  const res = await fetch(`${API}/api/upload`, { method: 'POST', body: form });
-  if (!res.ok) throw new Error('Upload failed');
-  return res.json(); // { url, filename }
+  // Convert file to base64
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  
+  const headers = { 
+    'Content-Type': 'application/json', 
+    ...(authHeaders() as Record<string, string>) 
+  } as HeadersInit;
+  
+  const res = await fetch(`${API}/api/upload`, { 
+    method: 'POST', 
+    headers,
+    body: JSON.stringify({ file: base64, filename: file.name })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(err.error || 'Upload failed');
+  }
+  return res.json(); // { url }
 }
 
 export async function getPresign(filename: string, contentType: string) {

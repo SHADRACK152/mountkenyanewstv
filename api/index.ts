@@ -250,13 +250,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Upload (Cloudinary)
     if (path === '/api/upload' && method === 'POST') {
       if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      
       const { file, filename } = req.body || {};
-      if (!file) return res.status(400).json({ error: 'No file' });
-      const result = await cloudinary.uploader.upload(file, {
-        folder: 'mtkenyanews',
-        public_id: `${Date.now()}-${filename?.replace(/[^a-zA-Z0-9.-]/g, '_') || 'img'}`,
-      });
-      return res.json({ url: result.secure_url });
+      if (!file) return res.status(400).json({ error: 'No file provided' });
+      
+      // Validate that Cloudinary is configured
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        console.error('Cloudinary not configured');
+        return res.status(500).json({ error: 'Image storage not configured' });
+      }
+      
+      try {
+        const result = await cloudinary.uploader.upload(file, {
+          folder: 'mtkenyanews',
+          public_id: `${Date.now()}-${filename?.replace(/[^a-zA-Z0-9.-]/g, '_') || 'img'}`,
+          resource_type: 'auto',
+        });
+        return res.json({ url: result.secure_url });
+      } catch (uploadErr: any) {
+        console.error('Cloudinary upload error:', uploadErr);
+        return res.status(500).json({ error: uploadErr.message || 'Upload to storage failed' });
+      }
     }
 
     // ===== ADMIN ROUTES =====
