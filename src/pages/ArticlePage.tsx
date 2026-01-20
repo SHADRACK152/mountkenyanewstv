@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Clock, Calendar, User, ChevronRight, Share2, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Bookmark, Send, AlertCircle } from 'lucide-react';
+import { Clock, Calendar, User, ChevronRight, Share2, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Bookmark, Send, AlertCircle, Link2, Copy, Check } from 'lucide-react';
 import * as api from '../lib/api';
 import type { ArticleWithRelations } from '../lib/database.types';
 import NewsCard from '../components/NewsCard';
@@ -26,6 +26,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   const [newComment, setNewComment] = useState('');
   const [commentStatus, setCommentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const subscriberEmail = localStorage.getItem('subscriber_email');
   const isSubscribed = !!subscriberEmail;
@@ -155,6 +156,34 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
     window.location.href = `mailto:?subject=${encodeURIComponent(article?.title || '')}&body=${encodeURIComponent(window.location.href)}`;
   };
 
+  const shareOnWhatsApp = () => {
+    const text = `${article?.title || ''}\n\nRead more: ${window.location.href}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+
+  const getShortUrl = () => {
+    // Return a clean short URL format
+    return `https://mtkenyanews.com/#article/${articleSlug}`;
+  };
+
   if (!article) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center pt-[200px] lg:pt-[220px]">
@@ -259,29 +288,60 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                     </span>
                     <span className="flex items-center gap-1">
                       <Eye size={14} />
-                      {article.views.toLocaleString()}
-                    </span>
+                      {article.views.toLocaleString()} title="Share on X/Twitter">
+                        <Twitter size={16} />
+                      </button>
+                      <button onClick={shareOnWhatsApp} className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors" title="Share on WhatsApp">
+                        <MessageCircle size={16} />
+                      </button>
+                      <button onClick={shareByEmail} className="p-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-colors" title="Share via Email">
+                        <Mail size={16} />
+                      </button>
+                      <button 
+                        onClick={copyLink} 
+                        className={`p-2 rounded-full transition-colors ${linkCopied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                        title={linkCopied ? 'Link copied!' : 'Copy link'}
+                      >
+                        {linkCopied ? <Check size={16} /> : <Link2 size={16} />}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-colors ${
+                          userLiked 
+                            ? 'bg-red-100 text-red-600' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
+                        }`}
+                      >
+                        <Heart size={16} fill={userLiked ? 'currentColor' : 'none'} />
+                        {likeCount}
+                      </button>
+                      <button className="p-2 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        <Bookmark size={16} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                {/* Article Body */}
-                <div 
-                  className="article-content prose prose-lg max-w-none 
-                    prose-headings:text-gray-900 prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4
-                    prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                    prose-p:text-gray-700 prose-p:leading-8 prose-p:mb-6 prose-p:text-[17px]
-                    prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-lg prose-img:my-8
-                    prose-a:text-red-600 prose-a:font-medium hover:prose-a:text-red-700
-                    prose-strong:text-gray-900 prose-strong:font-semibold
-                    prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2
-                    prose-li:text-gray-700 prose-li:leading-7
-                    prose-blockquote:border-l-4 prose-blockquote:border-red-500 prose-blockquote:bg-gray-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:italic prose-blockquote:text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
-                />
-
-                {/* Tags & Share */}
-                <div className="mt-10 pt-6 border-t border-gray-100">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
+                  
+                  {/* Short URL display */}
+                  <div className="mt-4 flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                    <Link2 size={16} className="text-gray-400" />
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={getShortUrl()} 
+                      className="flex-1 bg-transparent text-sm text-gray-600 outline-none"
+                    />
+                    <button 
+                      onClick={copyLink}
+                      className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                        linkCopied 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      {linkCopied ? 'Copied!' : 'Copy'}
+                    </buttonassName="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-500">Share:</span>
                       <button onClick={shareOnFacebook} className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">

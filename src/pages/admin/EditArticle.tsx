@@ -73,7 +73,7 @@ export default function EditArticle({ articleId }: Props) {
   const handleFile = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) return alert('Only images allowed');
-    if (file.size > 5 * 1024 * 1024) return alert('Max file size 5MB');
+    if (file.size > 10 * 1024 * 1024) return alert('Max file size 10MB');
     try {
       setUploading(true);
       if (uploadMode === 'server') {
@@ -84,9 +84,9 @@ export default function EditArticle({ articleId }: Props) {
         await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
         setFeaturedImage(publicUrl);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Upload failed');
+      alert(e.message || 'Upload failed. Please try a smaller image or different format.');
     } finally {
       setUploading(false);
     }

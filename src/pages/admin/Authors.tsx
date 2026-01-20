@@ -94,15 +94,15 @@ export default function AdminAuthors() {
 
   const handleAvatarUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) return alert('Only images allowed');
-    if (file.size > 2 * 1024 * 1024) return alert('Max file size 2MB');
+    if (file.size > 5 * 1024 * 1024) return alert('Max file size 5MB');
     
     setUploading(true);
     try {
       const result = await uploadFile(file);
       setFormData(prev => ({ ...prev, avatar_url: result.url }));
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Failed to upload image');
+      alert(e.message || 'Failed to upload image. Please try a smaller image.');
     } finally {
       setUploading(false);
     }

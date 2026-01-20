@@ -256,20 +256,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // Validate that Cloudinary is configured
       if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-        console.error('Cloudinary not configured');
-        return res.status(500).json({ error: 'Image storage not configured' });
+        console.error('Cloudinary not configured:', {
+          cloud_name: !!process.env.CLOUDINARY_CLOUD_NAME,
+          api_key: !!process.env.CLOUDINARY_API_KEY,
+          api_secret: !!process.env.CLOUDINARY_API_SECRET
+        });
+        return res.status(500).json({ error: 'Image storage not configured. Please check Cloudinary settings.' });
+      }
+      
+      // Check file size (base64 is ~33% larger than binary)
+      const base64Size = file.length * 0.75; // Approximate original size
+      if (base64Size > 15 * 1024 * 1024) {
+        return res.status(400).json({ error: 'File too large. Maximum 10MB allowed.' });
       }
       
       try {
+        console.log('Uploading to Cloudinary...', { 
+          filename, 
+          size: Math.round(base64Size / 1024) + 'KB',
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME
+        });
+        
         const result = await cloudinary.uploader.upload(file, {
           folder: 'mtkenyanews',
           public_id: `${Date.now()}-${filename?.replace(/[^a-zA-Z0-9.-]/g, '_') || 'img'}`,
           resource_type: 'auto',
+          transformation: [
+            { quality: 'auto:good', fetch_format: 'auto' }
+          ]
         });
-        return res.json({ url: result.secure_url });
+        
+        console.log('Upload successful:', result.secure_url);
+        return res.json({ url: result.secure_url, public_id: result.public_id });
       } catch (uploadErr: any) {
-        console.error('Cloudinary upload error:', uploadErr);
-        return res.status(500).json({ error: uploadErr.message || 'Upload to storage failed' });
+        console.error('Cloudinary upload error:', uploadErr.message || uploadErr);
+        
+        // Provide user-friendly error messages
+        let errorMessage = 'Upload failed. ';
+        if (uploadErr.message?.includes('File size too large')) {
+          errorMessage += 'Image is too large. Please use a smaller image.';
+        } else if (uploadErr.message?.includes('Invalid image')) {
+          errorMessage += 'Invalid image format. Please use JPG, PNG, or WebP.';
+        } else if (uploadErr.http_code === 401) {
+          errorMessage += 'Authentication error. Please check Cloudinary credentials.';
+        } else {
+          errorMessage += uploadErr.message || 'Please try again.';
+        }
+        
+        return res.status(500).json({ error: errorMessage });
       }
     }
 
