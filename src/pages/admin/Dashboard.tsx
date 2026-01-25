@@ -91,7 +91,7 @@ export default function AdminDashboard() {
             <Settings size={18} />
             Settings
           </a>
-          <a href="#admin/careers" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <a href="#admin-careers" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <FileText size={18} />
             Careers
           </a>
