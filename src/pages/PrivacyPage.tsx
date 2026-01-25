@@ -70,7 +70,7 @@ To exercise any of these rights, please contact us using the information provide
 
 Mount Kenya News
 Email: privacy@mtkenyanews.com
-Address: Nyeri Town, Kenya
+Address: Witeithie, Thika, Kenya
 
 We will respond to your inquiry within 30 days.`,
     },

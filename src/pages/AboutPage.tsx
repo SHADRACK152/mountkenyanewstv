@@ -162,11 +162,11 @@ export default function AboutPage() {
             </div>
             <div className="flex items-center gap-3">
               <Phone size={24} className="text-blue-300" />
-              <span>+254 700 000 000</span>
+              <span>0722 686 392</span>
             </div>
             <div className="flex items-center gap-3">
               <MapPin size={24} className="text-blue-300" />
-              <span>Nyeri, Kenya</span>
+              <span>Witeithie, Thika, Kenya</span>
             </div>
           </div>
           <a

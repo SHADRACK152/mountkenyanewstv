@@ -13,7 +13,7 @@ export default function AdminSettings() {
     siteName: 'Mount Kenya News',
     siteTagline: 'Your trusted source for news',
     siteEmail: 'info@mtkenyanews.com',
-    sitePhone: '+254 700 123 456',
+    sitePhone: '0722 686 392',
     articlesPerPage: 12,
     enableComments: true,
     moderateComments: true,

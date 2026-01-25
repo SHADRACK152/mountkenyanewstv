@@ -28,14 +28,14 @@ export default function ContactSection() {
             {
               icon: Phone,
               title: 'Phone',
-              content: '+254 (0) 700 123 456',
-              subtext: 'Available Mon-Fri, 9AM-6PM EAT',
+              content: '0722 686 392',
+              subtext: 'Available 24/7',
             },
             {
               icon: MapPin,
               title: 'Address',
-              content: 'Nairobi, Kenya',
-              subtext: 'Email for exact address & directions',
+              content: 'Witeithie, Thika, Kenya',
+              subtext: 'Mt. Kenya Region',
             },
           ].map((item, index) => (
             <AnimatedSection
