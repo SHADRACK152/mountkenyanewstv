@@ -147,7 +147,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="text-theme-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-400 text-sm">
-                  Kimathi Street, Nairobi<br />
+                  Witeithie, Thika<br />
                   Kenya
                 </span>
               </li>
