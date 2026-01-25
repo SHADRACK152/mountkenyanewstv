@@ -812,3 +812,30 @@ app.delete('/api/admin/subscribers/:id', adminMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete subscriber' });
   }
 });
+
+// ========== CAREER APPLICATIONS ==========
+app.post('/api/careers', upload.single('cv'), async (req, res) => {
+  try {
+    const { name, email, phone, message } = req.body;
+    const cv_url = req.file ? `/uploads/${req.file.filename}` : '';
+    if (!name || !email || !cv_url) return res.status(400).json({ error: 'Missing required fields' });
+    const result = await query(
+      'INSERT INTO career_applications (name, email, phone, message, cv_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, email, phone, message, cv_url]
+    );
+    res.json({ success: true, application: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to submit application' });
+  }
+});
+
+app.get('/api/admin/careers', adminMiddleware, async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM career_applications ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch applications' });
+  }
+});

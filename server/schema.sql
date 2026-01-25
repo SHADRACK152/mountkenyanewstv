@@ -71,6 +71,17 @@ CREATE TABLE IF NOT EXISTS article_likes (
     UNIQUE(article_id, subscriber_id)
 );
 
+-- Career Applications table
+CREATE TABLE IF NOT EXISTS career_applications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(200) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(30) DEFAULT '',
+    message TEXT DEFAULT '',
+    cv_url TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category_id);
 CREATE INDEX IF NOT EXISTS idx_articles_author ON articles(author_id);
