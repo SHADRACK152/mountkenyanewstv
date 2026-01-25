@@ -28,6 +28,7 @@ import PollPage from './pages/PollPage';
 import SubscribeModal from './components/SubscribeModal';
 import { updatePageTitle, resetMetaTags } from './lib/seo';
 import CareersPage from './pages/CareersPage';
+import AdminCareers from './pages/admin/Careers';
 
 type Page = 'home' | 'category' | 'article' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'polls' | 'poll' | 'subscribe';
 
@@ -160,6 +161,8 @@ function App() {
       } else if (hash === 'careers') {
         setRoute({ page: 'careers' });
         updatePageTitle('Careers');
+      } else if (hash === 'admin/careers') {
+        setRoute({ page: 'admin-careers' });
       } else {
         setRoute({ page: 'not-found' });
         updatePageTitle('Page Not Found');
