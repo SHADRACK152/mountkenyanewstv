@@ -47,17 +47,17 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: 'Call Us',
-      details: ['+254 700 000 000', '+254 711 000 000'],
+      details: ['0722 686 392'],
     },
     {
       icon: MapPin,
       title: 'Visit Us',
-      details: ['Mount Kenya News HQ', 'Nyeri Town, Kenya'],
+      details: ['Mount Kenya News HQ', 'Witeithie Thika, Kenya'],
     },
     {
       icon: Clock,
       title: 'Working Hours',
-      details: ['Mon - Fri: 8:00 AM - 6:00 PM', 'Sat: 9:00 AM - 1:00 PM'],
+      details: ['open 24/7'],
     },
   ];
 
@@ -211,7 +211,7 @@ export default function ContactPage() {
               <div className="text-center">
                 <MapPin size={48} className="mx-auto text-blue-600 mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Find Us</h3>
-                <p className="text-gray-600">Nyeri Town, Kenya</p>
+                <p className="text-gray-600">Thika, Kenya</p>
                 <p className="text-gray-500 text-sm mt-2">Mt. Kenya Region</p>
               </div>
             </div>
