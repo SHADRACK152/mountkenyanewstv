@@ -873,6 +873,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ ok: true });
     }
 
+    // Admin: trigger sitemap generation via server (runs scripts/generate-sitemaps.js)
+    if (path === '/api/admin/generate-sitemaps' && method === 'POST') {
+      if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const { exec } = await import('child_process');
+        await new Promise((resolve, reject) => {
+          const p = exec('node scripts/generate-sitemaps.js', { env: process.env, cwd: process.cwd(), timeout: 120000 }, (err, stdout, stderr) => {
+            if (err) return reject(new Error(stderr || err.message));
+            resolve(stdout);
+          });
+          // pipe stdout for server logs
+          if (p.stdout) p.stdout.pipe(process.stdout);
+          if (p.stderr) p.stderr.pipe(process.stderr);
+        });
+        return res.json({ ok: true, message: 'Sitemaps regenerated' });
+      } catch (err: any) {
+        console.error('Failed to generate sitemaps via admin endpoint:', err);
+        return res.status(500).json({ error: 'Failed to generate sitemaps', detail: err.message });
+      }
+    }
+
     // ===== SHORT LINKS SYSTEM =====
     
     // Generate short code

@@ -1,0 +1,42 @@
+name: Generate Sitemaps
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      SITE_URL: ${{ secrets.SITE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sitemap generator
+        run: npm run generate:sitemaps
+
+      - name: Commit generated sitemaps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/sitemap-*.xml || true
+          if git diff --staged --quiet; then
+            echo "no sitemap changes"
+          else
+            git commit -m "chore: regenerate sitemaps" || echo "commit failed"
+            git push
+          fi
