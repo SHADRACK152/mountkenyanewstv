@@ -1,31 +1,45 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import * as api from '../lib/api';
 import type { ArticleWithRelations } from '../lib/database.types';
 
 export default function BreakingNewsTicker() {
   const [breakingNews, setBreakingNews] = useState<ArticleWithRelations[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    // Check localStorage for visibility preference
+    const hidden = localStorage.getItem('breaking_news_hidden');
+    if (hidden === 'true') {
+      setIsVisible(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchBreakingNews();
   }, []);
 
   useEffect(() => {
-    if (breakingNews.length > 0) {
+    if (breakingNews.length > 0 && isVisible) {
       const interval = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % breakingNews.length);
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [breakingNews]);
+  }, [breakingNews, isVisible]);
 
   const fetchBreakingNews = async () => {
     const data = await api.getBreakingArticles(5);
     if (data) setBreakingNews(data as ArticleWithRelations[]);
   };
 
-  if (breakingNews.length === 0) return null;
+  const handleHide = () => {
+    setIsVisible(false);
+    localStorage.setItem('breaking_news_hidden', 'true');
+  };
+
+  if (breakingNews.length === 0 || !isVisible) return null;
 
   return (
     <div className="bg-theme-accent text-white py-3 shadow-lg">
@@ -48,7 +62,7 @@ export default function BreakingNewsTicker() {
               </a>
             ))}
           </div>
-          <div className="flex-shrink-0 flex items-center gap-1">
+          <div className="flex-shrink-0 flex items-center gap-2">
             {breakingNews.map((_, index) => (
               <button
                 key={index}
@@ -58,6 +72,14 @@ export default function BreakingNewsTicker() {
                 }`}
               />
             ))}
+            <button
+              onClick={handleHide}
+              className="ml-2 p-1 hover:bg-white/20 rounded-md transition-colors"
+              title="Hide breaking news"
+              aria-label="Hide breaking news"
+            >
+              <X size={16} />
+            </button>
           </div>
         </div>
       </div>

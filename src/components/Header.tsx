@@ -47,40 +47,36 @@ export default function Header() {
     <header className={`transition-all duration-300 ${
       isScrolled ? 'shadow-xl' : ''
     }`}>
-      {/* Top Bar */}
+      {/* Top Bar - Compact */}
       <div className="bg-theme-gradient">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-10 text-sm">
-            <div className="flex items-center space-x-6">
-              <div className="hidden sm:flex items-center space-x-4">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-white transition-colors">
-                  <Facebook size={16} />
+          <div className="flex items-center justify-between h-8 text-xs">
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-3">
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" title="Follow on Facebook" className="text-white/80 hover:text-white transition-colors">
+                  <Facebook size={14} />
                 </a>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-white transition-colors">
-                  <Twitter size={16} />
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" title="Follow on Twitter" className="text-white/80 hover:text-white transition-colors">
+                  <Twitter size={14} />
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-white transition-colors">
-                  <Instagram size={16} />
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" title="Follow on Instagram" className="text-white/80 hover:text-white transition-colors">
+                  <Instagram size={14} />
                 </a>
-                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-white transition-colors">
-                  <Youtube size={16} />
+                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" title="Subscribe on YouTube" className="text-white/80 hover:text-white transition-colors">
+                  <Youtube size={14} />
                 </a>
               </div>
-              <span className="text-white/60 hidden md:block">|</span>
-              <span className="text-white/80 hidden md:block">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <button
                 onClick={toggleDarkMode}
                 className="text-white/80 hover:text-white transition-colors p-1"
                 title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                {isDark ? <Sun size={14} /> : <Moon size={14} />}
               </button>
-              <a href="#admin-login" className="text-white/80 hover:text-white text-xs sm:text-sm flex items-center gap-1 transition-colors">
-                <User size={14} />
+              <a href="#admin-login" className="text-white/80 hover:text-white text-xs flex items-center gap-1 transition-colors">
+                <User size={12} />
                 <span className="hidden sm:inline">Admin</span>
               </a>
             </div>
