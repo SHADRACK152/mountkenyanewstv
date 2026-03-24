@@ -4,6 +4,10 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Sofia Pro', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+      },
       colors: {
         primary: 'var(--color-primary)',
         'primary-dark': 'var(--color-primary-dark)',

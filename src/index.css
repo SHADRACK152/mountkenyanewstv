@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Sofia+Pro:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -38,8 +38,13 @@
     font-family: 'Playfair Display', serif;
   }
   .font-sans {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Sofia Pro', sans-serif;
   }
+}
+
+/* Set Sofia Pro as base font */
+body {
+  font-family: 'Sofia Pro', sans-serif;
 }
 
 /* High Contrast Mode */
