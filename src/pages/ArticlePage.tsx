@@ -219,10 +219,10 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
       <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#006633] to-[#00994d] z-50" style={{ width: `${scrollProgress}%` }}></div>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 pt-24">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content - 2 columns on large screens */}
-          <main className="lg:col-span-2">
+      <div className="w-full mx-auto px-3 md:px-4 py-4 pt-20">
+        <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
+          {/* Main Content */}
+          <main className="w-full lg:w-2/3 min-w-0">
             {/* Category Badge */}
             {article.categories && (
               <a 
@@ -397,7 +397,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
           </main>
 
           {/* Sidebar - Right Column */}
-          <aside className="lg:col-span-1">
+          <aside className="w-full lg:w-1/3 min-w-0">
             {/* Trending Now */}
             {trendingArticles.length > 0 && (
               <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
