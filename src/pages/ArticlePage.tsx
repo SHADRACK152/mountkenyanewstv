@@ -391,19 +391,22 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
           {/* Article Body - Premium Typography */}
           {article.content ? (
             <div 
-              className="article-content-premium prose prose-lg max-w-none
-                prose-p:font-[400] prose-p:text-[19px] prose-p:leading-8 prose-p:text-gray-800 prose-p:mb-7
-                prose-headings:font-serif prose-h2:text-4xl prose-h2:font-bold prose-h2:text-gray-900 prose-h2:mt-12 prose-h2:mb-6
-                prose-h3:text-2xl prose-h3:font-bold prose-h3:text-gray-900 prose-h3:mt-10 prose-h3:mb-5
+              className="article-content-premium prose prose-sm sm:prose md:prose-lg max-w-full overflow-hidden
+                prose-p:font-[400] prose-p:text-base sm:prose-p:text-lg prose-p:leading-8 prose-p:text-gray-800 prose-p:mb-6 prose-p:break-words
+                prose-headings:font-serif prose-h1:text-2xl sm:prose-h1:text-3xl prose-h1:font-bold prose-h1:text-gray-900 prose-h1:mt-8 prose-h1:mb-4
+                prose-h2:text-xl sm:prose-h2:text-3xl prose-h2:font-bold prose-h2:text-gray-900 prose-h2:mt-10 prose-h2:mb-5
+                prose-h3:text-lg sm:prose-h3:text-2xl prose-h3:font-bold prose-h3:text-gray-900 prose-h3:mt-8 prose-h3:mb-4
                 prose-strong:font-semibold prose-strong:text-gray-900
                 prose-em:italic prose-em:text-gray-700
-                prose-ul:my-8 prose-ul:space-y-3 prose-ol:my-8 prose-ol:space-y-3
-                prose-li:text-[18px] prose-li:text-gray-800 prose-li:leading-relaxed
-                prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-gray-50 prose-blockquote:py-6 prose-blockquote:px-6 prose-blockquote:italic prose-blockquote:text-gray-700 prose-blockquote:text-[18px]
-                prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
-                prose-img:rounded-lg prose-img:my-10 prose-img:shadow-sm prose-img:max-w-full
-                prose-code:bg-gray-100 prose-code:text-red-600 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:break-all
-                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:overflow-x-auto"
+                prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2
+                prose-li:text-base sm:prose-li:text-lg prose-li:text-gray-800 prose-li:leading-relaxed
+                prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-gray-50 prose-blockquote:py-4 prose-blockquote:px-4 sm:prose-blockquote:px-6 prose-blockquote:italic prose-blockquote:text-gray-700 prose-blockquote:text-base sm:prose-blockquote:text-lg
+                prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline prose-a:break-words
+                prose-img:rounded-lg prose-img:my-8 prose-img:shadow-sm prose-img:w-full prose-img:max-w-full prose-img:h-auto
+                prose-code:bg-gray-100 prose-code:text-red-600 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-xs sm:prose-code:text-sm prose-code:break-words
+                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:rounded-lg
+                prose-table:w-full prose-table:border-collapse prose-th:bg-gray-100 prose-th:p-2 prose-th:border prose-th:border-gray-300 prose-td:p-2 prose-td:border prose-td:border-gray-300
+                prose-hr:my-8 prose-hr:border-gray-300"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
           ) : (
