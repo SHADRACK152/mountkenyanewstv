@@ -53,7 +53,7 @@ export default function NewsCard({ article, featured = false, horizontal = false
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight group-hover:text-blue-200 transition-colors">
               {article.title}
             </h2>
-            <p className="text-gray-200 text-lg mb-5 line-clamp-2 max-w-3xl">{article.excerpt}</p>
+            <p className="text-gray-200 text-lg mb-5 max-w-3xl">{article.excerpt}</p>
             <div className="flex items-center gap-6 text-sm text-gray-300">
               <div className="flex items-center gap-2">
                 <img src={article.authors.avatar_url} alt={article.authors.name} className="w-8 h-8 rounded-full border-2 border-white/30" />
@@ -99,7 +99,7 @@ export default function NewsCard({ article, featured = false, horizontal = false
           <span className="text-[10px] font-bold text-theme-primary uppercase tracking-wider">
             {article.categories.name}
           </span>
-          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-theme-primary transition-colors mt-0.5">
+          <h3 className="text-sm font-bold text-gray-900 group-hover:text-theme-primary transition-colors mt-0.5">
             {article.title}
           </h3>
           <div className="flex items-center gap-2 text-[11px] text-gray-500 mt-1.5">
@@ -129,7 +129,7 @@ export default function NewsCard({ article, featured = false, horizontal = false
           <span className="text-[10px] font-bold text-theme-primary uppercase tracking-wider">
             {article.categories.name}
           </span>
-          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-theme-primary transition-colors mt-0.5">
+          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-theme-primary transition-colors mt-0.5">
             {article.title}
           </h3>
           <span className="text-[11px] text-gray-500 mt-1">{formatDate(article.published_at)}</span>
@@ -139,7 +139,7 @@ export default function NewsCard({ article, featured = false, horizontal = false
   }
 
   return (
-    <a href={`#article/${article.slug}`} className="group block overflow-hidden rounded-xl bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <a href={`#article/${article.slug}`} className="group block rounded-xl bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <div className="relative h-52 overflow-hidden">
         <img
           src={article.featured_image}
@@ -171,10 +171,10 @@ export default function NewsCard({ article, featured = false, horizontal = false
       </div>
       
       <div className="p-5">
-        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-theme-primary transition-colors leading-snug">
+        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-theme-primary transition-colors leading-snug">
           {article.title}
         </h3>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{article.excerpt}</p>
+        <p className="text-gray-600 text-sm mb-4 leading-relaxed">{article.excerpt}</p>
         
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center gap-2">

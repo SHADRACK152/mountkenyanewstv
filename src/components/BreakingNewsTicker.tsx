@@ -44,7 +44,7 @@ export default function BreakingNewsTicker() {
                   index === currentIndex ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                <span className="text-sm font-medium truncate">{article.title}</span>
+                <span className="text-sm font-medium">{article.title}</span>
               </a>
             ))}
           </div>

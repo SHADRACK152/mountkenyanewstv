@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://www.mtkenyanews.com/sitemap-pages.xml</loc>
+    <lastmod>2026-02-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.mtkenyanews.com/sitemap-categories.xml</loc>
+    <lastmod>2026-02-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.mtkenyanews.com/sitemap-polls.xml</loc>
+    <lastmod>2026-02-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.mtkenyanews.com/sitemap-articles-1.xml</loc>
+    <lastmod>2026-02-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.mtkenyanews.com/sitemap-articles-2.xml</loc>
+    <lastmod>2026-02-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.mtkenyanews.com/sitemap-articles-3.xml</loc>
+    <lastmod>2026-02-27</lastmod>
+  </sitemap>
+</sitemapindex>

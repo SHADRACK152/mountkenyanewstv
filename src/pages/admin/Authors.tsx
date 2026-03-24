@@ -11,6 +11,10 @@ interface Author {
   email?: string;
   bio?: string;
   avatar_url?: string;
+  education?: string;
+  experience?: string;
+  specialization?: string;
+  location?: string;
 }
 
 export default function AdminAuthors() {
@@ -18,7 +22,16 @@ export default function AdminAuthors() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', email: '', bio: '', avatar_url: '' });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    email: '', 
+    bio: '', 
+    avatar_url: '',
+    education: '',
+    experience: '',
+    specialization: '',
+    location: ''
+  });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -54,7 +67,16 @@ export default function AdminAuthors() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', email: '', bio: '', avatar_url: '' });
+      setFormData({ 
+        name: '', 
+        email: '', 
+        bio: '', 
+        avatar_url: '',
+        education: '',
+        experience: '',
+        specialization: '',
+        location: ''
+      });
       await load();
     } catch (e) {
       console.error(e);
@@ -69,7 +91,11 @@ export default function AdminAuthors() {
       name: author.name, 
       email: author.email || '', 
       bio: author.bio || '', 
-      avatar_url: author.avatar_url || '' 
+      avatar_url: author.avatar_url || '',
+      education: author.education || '',
+      experience: author.experience || '',
+      specialization: author.specialization || '',
+      location: author.location || ''
     });
     setEditingId(author.id);
     setShowForm(true);
@@ -89,7 +115,16 @@ export default function AdminAuthors() {
   const cancelForm = () => {
     setShowForm(false);
     setEditingId(null);
-    setFormData({ name: '', email: '', bio: '', avatar_url: '' });
+    setFormData({ 
+      name: '', 
+      email: '', 
+      bio: '', 
+      avatar_url: '',
+      education: '',
+      experience: '',
+      specialization: '',
+      location: ''
+    });
   };
 
   const handleAvatarUpload = async (file: File) => {
@@ -264,6 +299,46 @@ export default function AdminAuthors() {
                         placeholder="Brief bio about the author..."
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                      <input
+                        type="text"
+                        value={formData.specialization}
+                        onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Political Correspondent, Entertainment"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Nairobi, Kenya"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
+                      <textarea
+                        value={formData.education}
+                        onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value }))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder="e.g., Bachelor's in Journalism, University of Nairobi"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Experience</label>
+                      <textarea
+                        value={formData.experience}
+                        onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder="e.g., 10 years in journalism, covered national elections"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-end gap-3 pt-4 border-t">
@@ -301,7 +376,7 @@ export default function AdminAuthors() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {authors.map((author) => (
-                  <div key={author.id} className="p-6 hover:bg-gray-50 flex items-center gap-4">
+                  <div key={author.id} className="p-6 hover:bg-gray-50 flex items-start gap-4">
                     <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {author.avatar_url ? (
                         <img src={author.avatar_url} alt={author.name} className="w-full h-full object-cover" />
@@ -311,15 +386,30 @@ export default function AdminAuthors() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900">{author.name}</h3>
-                      {author.email && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <Mail size={14} />
-                          {author.email}
-                        </div>
-                      )}
-                      {author.bio && (
-                        <p className="text-sm text-gray-500 truncate mt-1">{author.bio}</p>
-                      )}
+                      <div className="space-y-1 mt-1">
+                        {author.specialization && (
+                          <p className="text-xs font-medium text-blue-600 uppercase tracking-widest">{author.specialization}</p>
+                        )}
+                        {author.email && (
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <Mail size={14} />
+                            {author.email}
+                          </div>
+                        )}
+                        {author.location && (
+                          <p className="text-sm text-gray-500">
+                            <span className="font-medium">Location:</span> {author.location}
+                          </p>
+                        )}
+                        {author.bio && (
+                          <p className="text-sm text-gray-500 line-clamp-2">{author.bio}</p>
+                        )}
+                        {author.education && (
+                          <p className="text-xs text-gray-400">
+                            <span className="font-medium">Education:</span> {author.education}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button

@@ -4,9 +4,17 @@ import type { ArticleWithRelations } from './database.types';
 const API = import.meta.env.VITE_API_URL || '';
 
 async function getJSON(path: string) {
-  const res = await fetch(`${API}${path}`);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
+  try {
+    const res = await fetch(`${API}${path}`);
+    if (!res.ok) {
+      console.error(`API error: ${res.status} at ${path}`);
+      throw new Error(`API error: ${res.status}`);
+    }
+    return res.json();
+  } catch (err) {
+    console.error(`Failed to fetch ${path}:`, err);
+    throw err;
+  }
 }
 
 export async function getArticleBySlug(slug: string): Promise<ArticleWithRelations | null> {
@@ -118,14 +126,14 @@ export async function deleteCategory(id: string) {
 }
 
 // Admin Author Management
-export async function createAuthor(author: { name: string; email?: string; bio?: string; avatar_url?: string }) {
+export async function createAuthor(author: { name: string; email?: string; bio?: string; avatar_url?: string; education?: string; experience?: string; specialization?: string; location?: string }) {
   const headers = { 'Content-Type': 'application/json', ...(authHeaders() as Record<string, string>) } as HeadersInit;
   const res = await fetch(`${API}/api/admin/authors`, { method: 'POST', headers, body: JSON.stringify(author) });
   if (!res.ok) throw new Error('Create author failed');
   return res.json();
 }
 
-export async function updateAuthor(id: string, author: { name?: string; email?: string; bio?: string; avatar_url?: string }) {
+export async function updateAuthor(id: string, author: { name?: string; email?: string; bio?: string; avatar_url?: string; education?: string; experience?: string; specialization?: string; location?: string }) {
   const headers = { 'Content-Type': 'application/json', ...(authHeaders() as Record<string, string>) } as HeadersInit;
   const res = await fetch(`${API}/api/admin/authors/${encodeURIComponent(id)}`, { method: 'PUT', headers, body: JSON.stringify(author) });
   if (!res.ok) throw new Error('Update author failed');

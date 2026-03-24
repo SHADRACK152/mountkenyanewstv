@@ -59,7 +59,7 @@ export default function HeroBanner({ articles }: HeroBannerProps) {
                   {article.title}
                 </a>
               </h1>
-              <p className="text-lg md:text-xl text-gray-100 mb-6 line-clamp-2 max-w-3xl">
+              <p className="text-lg md:text-xl text-gray-100 mb-6 max-w-3xl">
                 {article.excerpt}
               </p>
               <div className="flex flex-wrap items-center gap-4 md:gap-6 text-gray-200 text-sm md:text-base">

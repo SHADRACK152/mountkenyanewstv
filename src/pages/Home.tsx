@@ -78,14 +78,6 @@ export default function Home() {
     setCurrentSlide((prev) => (prev - 1 + featuredArticles.length) % featuredArticles.length);
   };
 
-  const formatHeroDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Section - Full Width Slider */}
@@ -303,7 +295,7 @@ export default function Home() {
                       <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
                         {article.categories.name}
                       </span>
-                      <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors mt-1">
+                      <h4 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mt-1">
                         {article.title}
                       </h4>
                     </div>

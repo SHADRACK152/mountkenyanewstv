@@ -116,11 +116,11 @@ export default function PollsPage() {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                       {poll.title}
                     </h3>
                     {poll.description && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{poll.description}</p>
+                      <p className="text-gray-600 text-sm mb-4">{poll.description}</p>
                     )}
 
                     {/* Leading option preview */}
@@ -130,7 +130,7 @@ export default function PollsPage() {
                           <span className="text-gray-600">Leading:</span>
                           <span className="font-bold text-blue-600">{leadingPercentage}%</span>
                         </div>
-                        <p className="text-gray-900 font-medium text-sm truncate">{leadingOption.title}</p>
+                        <p className="text-gray-900 font-medium text-sm">{leadingOption.title}</p>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
                           <div 
                             className="bg-blue-600 h-1.5 rounded-full"

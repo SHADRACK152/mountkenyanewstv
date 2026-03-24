@@ -16,8 +16,13 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          email?: string;
           bio: string;
           avatar_url: string;
+          education?: string;
+          experience?: string;
+          specialization?: string;
+          location?: string;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['authors']['Row'], 'id' | 'created_at'>;

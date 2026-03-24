@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Vote, CheckCircle, Phone, AlertCircle, TrendingUp, Share2, Facebook, Twitter, Link2, Check, ArrowLeft, Calendar, Users } from 'lucide-react';
+import { Vote, CheckCircle, Phone, AlertCircle, Share2, Facebook, Twitter, Link2, Check, ArrowLeft, Calendar, Users, MessageCircle } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -40,7 +40,6 @@ export default function PollPage({ pollId }: PollPageProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [shortUrl, setShortUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPoll();
@@ -61,36 +60,10 @@ export default function PollPage({ pollId }: PollPageProps) {
         setHasVoted(true);
         setVotedOptionId(votedPolls[pollId].optionId);
       }
-
-      // Get or create short link for this poll
-      fetchShortUrl(pollId);
     } catch (err) {
       console.error('Failed to fetch poll:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchShortUrl = async (id: string) => {
-    try {
-      const checkRes = await fetch(`${API}/api/poll-links?poll_id=${id}`);
-      const checkData = await checkRes.json();
-      
-      if (checkData.exists) {
-        setShortUrl(checkData.short_url);
-      } else {
-        const createRes = await fetch(`${API}/api/poll-links`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ poll_id: id }),
-        });
-        const createData = await createRes.json();
-        if (createData.short_url) {
-          setShortUrl(createData.short_url);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to get short URL:', err);
     }
   };
 
@@ -169,11 +142,7 @@ export default function PollPage({ pollId }: PollPageProps) {
     }
   };
 
-  // Always prefer short URL for sharing (it has OG tags for previews)
   const getShareUrl = () => {
-    // If short URL is available, use it (better for social media previews)
-    if (shortUrl) return shortUrl;
-    // Fallback to direct URL (won't show previews on social media)
     return `https://www.mtkenyanews.com/#poll/${pollId}`;
   };
 
@@ -215,9 +184,10 @@ export default function PollPage({ pollId }: PollPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-[200px] lg:pt-[220px]">
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center pt-[200px] lg:pt-[220px]">
+        <div className="text-center p-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#006633] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading poll...</p>
         </div>
       </div>
     );
@@ -225,13 +195,14 @@ export default function PollPage({ pollId }: PollPageProps) {
 
   if (!poll) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-[200px] lg:pt-[220px]">
-        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <Vote size={64} className="mx-auto text-gray-300 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Poll Not Found</h1>
-          <p className="text-gray-500 mb-6">This poll may have been removed or doesn't exist.</p>
-          <a href="#polls" className="text-blue-600 font-semibold hover:underline">
-            ← View All Polls
+      <div className="min-h-screen bg-white pt-[200px] lg:pt-[220px]">
+        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-20 text-center">
+          <Vote size={56} className="mx-auto text-gray-300 mb-4" />
+          <h1 className="text-3xl font-serif font-bold text-gray-900 mb-3">Poll Not Found</h1>
+          <p className="text-gray-600 text-lg mb-8">This poll may have been removed or doesn't exist.</p>
+          <a href="#polls" className="inline-flex items-center gap-2 px-8 py-3 bg-[#006633] text-white font-semibold rounded-full hover:bg-[#004d24] transition-colors">
+            <ArrowLeft size={18} />
+            Back to Polls
           </a>
         </div>
       </div>
@@ -247,228 +218,255 @@ export default function PollPage({ pollId }: PollPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-[200px] lg:pt-[220px]">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <a href="#polls" className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-4 transition-colors">
-            <ArrowLeft size={18} />
-            Back to Polls
-          </a>
-          <div className="flex items-center gap-3 text-white">
-            <Vote size={28} />
-            <span className="text-sm font-semibold uppercase tracking-wider">
-              {poll.type === 'nomination' ? 'Nomination Poll' : 'Voting Poll'}
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <div className="relative w-full h-[400px] lg:h-[500px] pt-[200px] lg:pt-[220px] bg-gradient-to-br from-[#006633] to-[#00994d]">
+        {/* Decorative Background */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        </div>
+
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-4 sm:px-8 text-center z-10">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="p-3 bg-white/20 rounded-full">
+              <Vote size={32} className="text-white" />
+            </div>
+            <span className="px-4 py-2 bg-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-sm">
+              {poll.type === 'nomination' ? 'Nomination' : 'Poll'}
             </span>
           </div>
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight max-w-4xl drop-shadow-lg">
+            {poll.title}
+          </h1>
+          {poll.description && (
+            <p className="font-sans text-lg sm:text-xl text-white/90 max-w-2xl leading-relaxed drop-shadow">
+              {poll.description}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-6 sm:p-8">
-            {/* Poll Title */}
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-3">
-              {poll.title}
-            </h1>
-            {poll.description && (
-              <p className="text-lg text-gray-600 mb-6">{poll.description}</p>
-            )}
-
-            {/* Meta info */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
-              <span className="flex items-center gap-1">
-                <Users size={16} />
-                {poll.total_votes.toLocaleString()} votes
-              </span>
-              {poll.end_date && (
-                <span className="flex items-center gap-1">
-                  <Calendar size={16} />
-                  Ends {formatDate(poll.end_date)}
-                </span>
-              )}
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                poll.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-              }`}>
-                {poll.status === 'active' ? 'Active' : 'Closed'}
-              </span>
+      {/* Main Content */}
+      <div className="max-w-3xl mx-auto px-6 sm:px-8 py-16">
+        
+        {/* Poll Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-12 pb-8 border-b border-gray-200">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Users size={18} className="text-[#006633]" />
+              <span className="text-2xl font-bold text-gray-900">{poll.total_votes.toLocaleString()}</span>
             </div>
-
-            {/* Success message */}
-            {success && (
-              <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl mb-6">
-                <CheckCircle size={20} />
-                <span className="font-medium">Thank you! Your vote has been recorded.</span>
+            <p className="text-sm text-gray-600">Total Votes</p>
+          </div>
+          {poll.end_date && (
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Calendar size={18} className="text-[#006633]" />
+                <span className="text-lg font-semibold text-gray-900">{formatDate(poll.end_date).split(' ')[0]}</span>
               </div>
-            )}
-
-            {/* Voting Options */}
-            <div className="space-y-4 mb-6">
-              {poll.options.map(option => {
-                const percentage = poll.total_votes > 0 
-                  ? Math.round((option.votes_count / poll.total_votes) * 100) 
-                  : 0;
-                const isSelected = selectedOption === option.id;
-                const isVotedOption = votedOptionId === option.id;
-                
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => !hasVoted && poll.status === 'active' && setSelectedOption(option.id)}
-                    disabled={hasVoted || poll.status !== 'active'}
-                    className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
-                      isSelected 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : isVotedOption
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    } ${(hasVoted || poll.status !== 'active') ? 'cursor-default' : 'cursor-pointer'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      {option.image_url && (
-                        <img 
-                          src={option.image_url} 
-                          alt={option.title}
-                          className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-lg font-semibold ${isVotedOption ? 'text-green-700' : 'text-gray-900'}`}>
-                            {option.title}
-                            {isVotedOption && (
-                              <CheckCircle size={18} className="inline ml-2 text-green-600" />
-                            )}
-                          </span>
-                          {(hasVoted || poll.show_results) && (
-                            <span className="text-lg font-bold text-gray-700">{percentage}%</span>
-                          )}
-                        </div>
-                        {option.description && (
-                          <p className="text-sm text-gray-500 mb-3">{option.description}</p>
-                        )}
-                        {(hasVoted || poll.show_results) && (
-                          <div className="w-full bg-gray-200 rounded-full h-3">
-                            <div 
-                              className={`h-3 rounded-full transition-all duration-700 ${
-                                isVotedOption ? 'bg-green-500' : 'bg-blue-500'
-                              }`}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        )}
-                        {(hasVoted || poll.show_results) && (
-                          <p className="text-sm text-gray-500 mt-2">{option.votes_count.toLocaleString()} votes</p>
-                        )}
-                      </div>
-                      {!hasVoted && poll.status === 'active' && (
-                        <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-                          isSelected 
-                            ? 'border-blue-500 bg-blue-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {isSelected && <Check size={14} className="text-white" />}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+              <p className="text-sm text-gray-600">Ends</p>
             </div>
-
-            {/* Phone Input */}
-            {showPhoneInput && !hasVoted && poll.status === 'active' && (
-              <div className="p-5 bg-blue-50 rounded-xl mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  <Phone size={16} className="inline mr-2" />
-                  Enter your phone number to verify your vote
-                </label>
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={e => setPhoneNumber(formatPhoneNumber(e.target.value))}
-                  placeholder="0712345678"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Your phone number ensures one vote per person and will be kept private.
-                </p>
-              </div>
-            )}
-
-            {/* Error message */}
-            {error && (
-              <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl mb-6">
-                <AlertCircle size={20} />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Vote button */}
-            {!hasVoted && poll.status === 'active' && (
-              <button
-                onClick={handleVote}
-                disabled={!selectedOption || voting}
-                className="w-full px-8 py-4 bg-blue-600 text-white font-bold text-lg rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {voting ? 'Submitting...' : showPhoneInput ? 'Submit My Vote' : 'Vote Now'}
-              </button>
-            )}
-
-            {poll.status !== 'active' && (
-              <div className="text-center py-4 text-gray-500">
-                This poll is no longer accepting votes.
-              </div>
-            )}
-
-            {/* Total votes */}
-            <div className="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-gray-100 text-gray-500">
-              <TrendingUp size={18} />
-              <span className="font-medium">{poll.total_votes.toLocaleString()} total votes</span>
+          )}
+          <div className="text-center col-span-2 sm:col-span-1">
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${
+              poll.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${poll.status === 'active' ? 'bg-green-600' : 'bg-gray-600'}`}></span>
+              {poll.status === 'active' ? 'Active' : 'Closed'}
             </div>
           </div>
+        </div>
 
-          {/* Share Section */}
-          <div className="bg-gray-50 px-6 sm:px-8 py-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <Share2 size={16} />
-              Share this poll
-            </h3>
+        {/* Success Message */}
+        {success && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 text-green-700 rounded-2xl mb-8">
+            <CheckCircle size={20} className="flex-shrink-0" />
+            <span className="font-medium">Thank you! Your vote has been recorded.</span>
+          </div>
+        )}
+
+        {/* Voting Options */}
+        <div className="space-y-4 mb-8">
+          {poll.options.map((option) => {
+            const percentage = poll.total_votes > 0 
+              ? Math.round((option.votes_count / poll.total_votes) * 100) 
+              : 0;
+            const isSelected = selectedOption === option.id;
+            const isVotedOption = votedOptionId === option.id;
+            
+            return (
+              <button
+                key={option.id}
+                onClick={() => !hasVoted && poll.status === 'active' && setSelectedOption(option.id)}
+                disabled={hasVoted || poll.status !== 'active'}
+                className={`w-full text-left p-6 rounded-2xl border-2 transition-all backdrop-blur-sm ${
+                  isSelected 
+                    ? 'border-[#006633] bg-[#006633]/5' 
+                    : isVotedOption
+                    ? 'border-green-500 bg-green-50/50'
+                    : 'border-gray-200 hover:border-[#006633]/30 hover:bg-gray-50'
+                } ${(hasVoted || poll.status !== 'active') ? 'cursor-default' : 'cursor-pointer'}`}
+              >
+                <div className="flex items-start gap-4">
+                  {option.image_url && (
+                    <img 
+                      src={option.image_url} 
+                      alt={option.title}
+                      className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-gray-200"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <span className={`text-lg font-serif font-bold ${isVotedOption ? 'text-green-700' : 'text-gray-900'}`}>
+                        {option.title}
+                        {isVotedOption && (
+                          <CheckCircle size={18} className="inline ml-2 text-green-600" />
+                        )}
+                      </span>
+                      {(hasVoted || poll.show_results) && (
+                        <span className="text-xl font-bold text-[#006633] flex-shrink-0">{percentage}%</span>
+                      )}
+                    </div>
+                    {option.description && (
+                      <p className="text-sm text-gray-600 mb-4">{option.description}</p>
+                    )}
+                    {(hasVoted || poll.show_results) && (
+                      <>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                          <div 
+                            className={`h-2.5 rounded-full transition-all duration-700 ${
+                              isVotedOption ? 'bg-green-500' : 'bg-[#006633]'
+                            }`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <p className="text-sm text-gray-500">{option.votes_count.toLocaleString()} votes</p>
+                      </>
+                    )}
+                  </div>
+                  {!hasVoted && poll.status === 'active' && (
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'border-[#006633] bg-[#006633]' 
+                        : 'border-gray-300'
+                    }`}>
+                      {isSelected && <Check size={16} className="text-white" />}
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Phone Input */}
+        {showPhoneInput && !hasVoted && poll.status === 'active' && (
+          <div className="p-6 bg-[#006633]/5 border border-[#006633]/20 rounded-2xl mb-8 backdrop-blur-sm">
+            <label className="block text-sm font-semibold text-gray-900 mb-3">
+              <Phone size={16} className="inline mr-2 text-[#006633]" />
+              Verify with your phone number
+            </label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={e => setPhoneNumber(formatPhoneNumber(e.target.value))}
+              placeholder="0712345678"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006633] text-base"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              ✓ Your phone is verified. One vote per number ensures fair polling.
+            </p>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl mb-8">
+            <AlertCircle size={20} className="flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Vote Button */}
+        {!hasVoted && poll.status === 'active' && (
+          <button
+            onClick={handleVote}
+            disabled={!selectedOption || voting}
+            className="w-full px-8 py-4 bg-[#006633] text-white font-semibold text-lg rounded-2xl hover:bg-[#004d24] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <Vote size={20} />
+            {voting ? 'Submitting...' : showPhoneInput ? 'Submit My Vote' : 'Vote Now'}
+          </button>
+        )}
+
+        {poll.status !== 'active' && (
+          <div className="text-center py-8 text-gray-500">
+            <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
+            <p className="text-lg">This poll is no longer accepting votes</p>
+          </div>
+        )}
+
+        {/* Share Section */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <h2 className="text-lg font-serif font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Share2 size={20} className="text-[#006633]" />
+            Share This Poll
+          </h2>
+          <div className="space-y-4">
+            {/* Share Buttons */}
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={shareOnFacebook} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors" title="Share on Facebook">
+              <button 
+                onClick={shareOnFacebook} 
+                className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:shadow-lg transition-all border border-gray-200" 
+                title="Share on Facebook"
+              >
                 <Facebook size={20} />
               </button>
-              <button onClick={shareOnTwitter} className="p-3 bg-gray-900 text-white rounded-xl hover:bg-black transition-colors" title="Share on X/Twitter">
+              <button 
+                onClick={shareOnTwitter} 
+                className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-gray-900 hover:bg-gray-50 hover:shadow-lg transition-all border border-gray-200" 
+                title="Share on X/Twitter"
+              >
                 <Twitter size={20} />
               </button>
-              <button onClick={shareOnWhatsApp} className="p-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors" title="Share on WhatsApp">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
+              <button 
+                onClick={shareOnWhatsApp} 
+                className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-green-600 hover:bg-green-50 hover:shadow-lg transition-all border border-gray-200" 
+                title="Share on WhatsApp"
+              >
+                <MessageCircle size={20} />
               </button>
               <button 
                 onClick={copyLink}
-                className={`p-3 rounded-xl transition-colors ${linkCopied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                className={`w-12 h-12 rounded-full shadow-md flex items-center justify-center transition-all border ${
+                  linkCopied 
+                    ? 'bg-green-100 text-green-600 border-green-300' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:shadow-lg'
+                }`}
                 title={linkCopied ? 'Copied!' : 'Copy link'}
               >
                 {linkCopied ? <Check size={20} /> : <Link2 size={20} />}
               </button>
-              <div className="flex-1 min-w-[200px]">
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={shortUrl || `www.mtkenyanews.com/#poll/${pollId}`}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 font-mono"
-                />
-              </div>
+            </div>
+            {/* Share Link */}
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                readOnly 
+                value={`www.mtkenyanews.com/#poll/${pollId}`}
+                className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 font-mono focus:outline-none"
+              />
             </div>
           </div>
         </div>
 
-        {/* Back to polls */}
-        <div className="mt-8 text-center">
-          <a href="#polls" className="text-blue-600 font-semibold hover:underline">
-            ← View All Polls
+        {/* Back to Polls */}
+        <div className="mt-12 text-center">
+          <a href="#polls" className="inline-flex items-center gap-2 px-6 py-3 text-[#006633] font-semibold hover:bg-gray-50 rounded-full transition-colors">
+            <ArrowLeft size={18} />
+            Back to All Polls
           </a>
         </div>
       </div>

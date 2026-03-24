@@ -5,6 +5,7 @@ import BreakingNewsTicker from './components/BreakingNewsTicker';
 import Home from './pages/Home';
 import CategoryPage from './pages/CategoryPage';
 import ArticlePage from './pages/ArticlePage';
+import AuthorPage from './pages/AuthorPage';
 import SearchPage from './pages/SearchPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
@@ -30,7 +31,7 @@ import { updatePageTitle, resetMetaTags } from './lib/seo';
 import CareersPage from './pages/CareersPage';
 import AdminCareers from './pages/admin/Careers';
 
-type Page = 'home' | 'category' | 'article' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'polls' | 'poll' | 'subscribe';
+type Page = 'home' | 'category' | 'article' | 'author' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'admin-careers' | 'polls' | 'poll' | 'careers' | 'subscribe';
 
 interface RouteState {
   page: Page;
@@ -107,6 +108,10 @@ function App() {
       } else if (hash.startsWith('article/')) {
         const articleSlug = hash.split('/')[1];
         setRoute({ page: 'article', param: articleSlug });
+      } else if (hash.startsWith('author/')) {
+        const authorId = hash.split('/')[1];
+        setRoute({ page: 'author', param: authorId });
+        updatePageTitle('Author Profile');
       } else if (hash.startsWith('search/')) {
         const query = decodeURIComponent(hash.split('/')[1] || '');
         setRoute({ page: 'search', param: query });
@@ -187,6 +192,8 @@ function App() {
         return route.param ? <CategoryPage categorySlug={route.param} /> : <Home />;
       case 'article':
         return route.param ? <ArticlePage articleSlug={route.param} /> : <Home />;
+      case 'author':
+        return route.param ? <AuthorPage authorId={route.param} /> : <Home />;
       case 'admin-login':
         return <AdminLogin />;
       case 'admin':
@@ -227,6 +234,8 @@ function App() {
         return route.param ? <PollPage pollId={route.param} /> : <PollsPage />;
       case 'careers':
         return <CareersPage />;
+      case 'admin-careers':
+        return <AdminRoute><AdminCareers /></AdminRoute>;
       case 'not-found':
         return <NotFoundPage />;
       default:

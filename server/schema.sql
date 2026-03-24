@@ -110,3 +110,16 @@ ON CONFLICT (slug) DO NOTHING;
 INSERT INTO authors (name, bio, avatar_url) VALUES
     ('MT Kenya News', 'The editorial team at Mount Kenya News', 'https://ui-avatars.com/api/?name=MT+Kenya&background=1e40af&color=fff&size=200')
 ON CONFLICT DO NOTHING;
+
+-- Add new author fields (migrations)
+ALTER TABLE authors
+ADD COLUMN IF NOT EXISTS education TEXT DEFAULT '';
+
+ALTER TABLE authors
+ADD COLUMN IF NOT EXISTS experience TEXT DEFAULT '';
+
+ALTER TABLE authors
+ADD COLUMN IF NOT EXISTS specialization VARCHAR(200) DEFAULT '';
+
+ALTER TABLE authors
+ADD COLUMN IF NOT EXISTS location VARCHAR(200) DEFAULT '';
