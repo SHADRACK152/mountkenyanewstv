@@ -214,15 +214,15 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#006633] to-[#00994d] z-50" style={{ width: `${scrollProgress}%` }}></div>
 
       {/* Main Container */}
-      <div className="w-full mx-auto px-3 md:px-4 py-4 pt-20">
-        <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto">
+      <div className="w-screen max-w-full mx-auto px-3 md:px-4 py-4 pt-20 overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row gap-6 max-w-4xl mx-auto w-full">
           {/* Main Content */}
-          <main className="w-full lg:w-2/3 min-w-0 overflow-hidden">
+          <main className="w-full lg:w-2/3 min-w-0 overflow-x-hidden">
             {/* Category Badge */}
             {article.categories && (
               <a 
@@ -283,24 +283,26 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
             )}
 
             {/* Article Content */}
-            <div className="w-full overflow-hidden">
+            <div className="w-full max-w-full overflow-x-hidden" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
               <article 
-                className="prose prose-sm md:prose-base lg:prose-lg w-full mb-12 overflow-hidden
-                  prose-headings:font-serif prose-headings:font-bold prose-headings:text-gray-900 prose-headings:w-full prose-headings:break-words prose-headings:overflow-hidden
+                className="prose prose-sm md:prose-base lg:prose-lg !max-w-none w-full mb-12
+                  prose-headings:font-serif prose-headings:font-bold prose-headings:text-gray-900 
                   prose-h1:text-2xl md:prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
                   prose-h2:text-xl md:prose-h2:text-2xl prose-h2:mt-6 prose-h2:mb-3
                   prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
-                  prose-p:text-gray-700 prose-p:leading-8 prose-p:mb-6 prose-p:text-left prose-p:break-words prose-p:w-full prose-p:overflow-hidden prose-p:word-break[break-word]
-                  prose-strong:text-gray-900 prose-strong:font-bold prose-strong:break-words
+                  prose-p:text-gray-700 prose-p:leading-8 prose-p:mb-6 prose-p:text-left
+                  prose-strong:text-gray-900 prose-strong:font-bold
                   prose-em:text-gray-800
-                  prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-[#006633]/5 prose-blockquote:py-4 prose-blockquote:px-4 prose-blockquote:italic prose-blockquote:w-full prose-blockquote:break-words prose-blockquote:overflow-hidden
-                  prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline prose-a:break-all prose-a:overflow-hidden
-                  prose-img:rounded-lg prose-img:my-8 prose-img:w-full prose-img:max-w-full prose-img:h-auto prose-img:overflow-hidden
-                  prose-ul:my-6 prose-ul:space-y-3 prose-ul:w-full prose-ul:overflow-hidden prose-ol:my-6 prose-ol:space-y-3 prose-ol:w-full prose-ol:overflow-hidden
-                  prose-li:text-gray-700 prose-li:leading-relaxed prose-li:break-words prose-li:overflow-hidden
-                  prose-code:bg-gray-100 prose-code:text-[#006633] prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:break-all prose-code:overflow-hidden
-                  prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:w-full
-                  prose-hr:my-8 prose-hr:border-gray-300"
+                  prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-[#006633]/5 prose-blockquote:py-4 prose-blockquote:px-4 prose-blockquote:italic
+                  prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+                  prose-img:rounded-lg prose-img:my-8 prose-img:w-full prose-img:max-w-full prose-img:h-auto
+                  prose-ul:my-6 prose-ul:space-y-3 prose-ol:my-6 prose-ol:space-y-3
+                  prose-li:text-gray-700 prose-li:leading-relaxed
+                  prose-code:bg-gray-100 prose-code:text-[#006633] prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm
+                  prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:w-full
+                  prose-hr:my-8 prose-hr:border-gray-300
+                  [&_*]:max-w-full [&_*]:break-words [&_p]:hyphens-auto"
+                style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
                 dangerouslySetInnerHTML={{ __html: article.content || '<p>No content available.</p>' }}
               />
             </div>
@@ -397,7 +399,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
           </main>
 
           {/* Sidebar - Right Column */}
-          <aside className="w-full lg:w-1/3 min-w-0">
+          <aside className="w-full lg:w-1/3 min-w-0 overflow-x-hidden">
             {/* Trending Now */}
             {trendingArticles.length > 0 && (
               <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
