@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import BreakingNewsTicker from './components/BreakingNewsTicker';
-import Home from './pages/Home';
+import HomeCitizenLayout from './pages/HomeCitizenLayout';
 import CategoryPage from './pages/CategoryPage';
 import ArticlePage from './pages/ArticlePage';
 import AuthorPage from './pages/AuthorPage';
@@ -189,11 +189,11 @@ function App() {
   const renderPage = () => {
     switch (route.page) {
       case 'category':
-        return route.param ? <CategoryPage categorySlug={route.param} /> : <Home />;
+        return route.param ? <CategoryPage categorySlug={route.param} /> : <HomeCitizenLayout />;
       case 'article':
-        return route.param ? <ArticlePage articleSlug={route.param} /> : <Home />;
+        return route.param ? <ArticlePage articleSlug={route.param} /> : <HomeCitizenLayout />;
       case 'author':
-        return route.param ? <AuthorPage authorId={route.param} /> : <Home />;
+        return route.param ? <AuthorPage authorId={route.param} /> : <HomeCitizenLayout />;
       case 'admin-login':
         return <AdminLogin />;
       case 'admin':
@@ -219,7 +219,7 @@ function App() {
       case 'admin-settings':
         return <AdminRoute><AdminSettings /></AdminRoute>;
       case 'search':
-        return route.param ? <SearchPage query={route.param} /> : <Home />;
+        return route.param ? <SearchPage query={route.param} /> : <HomeCitizenLayout />;
       case 'about':
         return <AboutPage />;
       case 'contact':
@@ -239,7 +239,7 @@ function App() {
       case 'not-found':
         return <NotFoundPage />;
       default:
-        return <Home />;
+        return <HomeCitizenLayout />;
     }
   };
 
