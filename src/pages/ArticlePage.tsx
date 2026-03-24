@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Clock, Calendar, User, ChevronRight, Share2, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Bookmark, Send, AlertCircle, Link2, Copy, Check } from 'lucide-react';
+import { Clock, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Send, AlertCircle, Link2, Check } from 'lucide-react';
 import * as api from '../lib/api';
 import type { ArticleWithRelations } from '../lib/database.types';
-import NewsCard from '../components/NewsCard';
 
 // Use relative URL in production (same origin), or localhost for development
 const API = import.meta.env.VITE_API_URL || '';
@@ -28,67 +27,54 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   const [commentStatus, setCommentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
-  const [shortUrl, setShortUrl] = useState<string | null>(null);
-  const [isLoadingShortUrl, setIsLoadingShortUrl] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const subscriberEmail = localStorage.getItem('subscriber_email');
   const isSubscribed = !!subscriberEmail;
 
+  // All hooks MUST be at the top before any conditional returns
   useEffect(() => {
     fetchArticleData();
   }, [articleSlug]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrolled = window.scrollY;
+      const progress = docHeight > 0 ? (scrolled / docHeight) * 100 : 0;
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const fetchArticleData = async () => {
-    const articleData = await api.getArticleBySlug(articleSlug);
-
-    if (articleData) {
-      const article = articleData as ArticleWithRelations;
-      setArticle(article);
-
-      await api.incrementViews(article.id);
-
-      // Fetch related articles
-      const relatedData = await api.getRelatedArticles(article.category_id, article.id, 3);
-      if (relatedData) setRelatedArticles(relatedData as ArticleWithRelations[]);
-
-      // Fetch comments
-      fetchComments(article.id);
-
-      // Fetch likes
-      fetchLikes(article.id);
-      
-      // Get or create short link
-      fetchShortUrl(article.id);
-    }
-  };
-
-  const fetchShortUrl = async (articleId: string) => {
-    setIsLoadingShortUrl(true);
     try {
-      // First check if short link exists
-      const checkRes = await fetch(`${API}/api/short-links?article_id=${articleId}`);
-      const checkData = await checkRes.json();
-      
-      if (checkData.exists) {
-        setShortUrl(checkData.short_url);
+      const articleData = await api.getArticleBySlug(articleSlug);
+
+      if (articleData) {
+        const article = articleData as ArticleWithRelations;
+        setArticle(article);
+
+        await api.incrementViews(article.id);
+
+        // Fetch related articles
+        const relatedData = await api.getRelatedArticles(article.category_id, article.id, 3);
+        if (relatedData) setRelatedArticles(relatedData as ArticleWithRelations[]);
+
+        // Fetch comments
+        fetchComments(article.id);
+
+        // Fetch likes
+        fetchLikes(article.id);
       } else {
-        // Create new short link
-        const createRes = await fetch(`${API}/api/short-links`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ article_id: articleId }),
-        });
-        const createData = await createRes.json();
-        if (createData.short_url) {
-          setShortUrl(createData.short_url);
-        }
+        console.error('Article not found:', articleSlug);
+        setArticle(null);
       }
     } catch (err) {
-      console.error('Failed to get short URL:', err);
-      // Fallback to regular URL
-      setShortUrl(null);
-    } finally {
-      setIsLoadingShortUrl(false);
+      console.error('Error fetching article:', err);
+      setArticle(null);
     }
   };
 
@@ -180,9 +166,8 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
     }
   };
 
-  // Always prefer short URL for sharing (it has OG tags for previews)
+  // Generate share URL
   const getShareUrl = () => {
-    if (shortUrl) return shortUrl;
     return `https://www.mtkenyanews.com/#article/${articleSlug}`;
   };
 
@@ -230,8 +215,13 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center pt-[200px] lg:pt-[220px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center p-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#006633] mx-auto mb-4"></div>
+          <p className="text-gray-600 mb-2">Loading article...</p>
+          <p className="text-sm text-gray-500">Slug: <code className="bg-gray-100 px-2 py-1 rounded">{articleSlug}</code></p>
+          <p className="text-xs text-gray-400 mt-4">Check browser console (F12) for errors</p>
+        </div>
       </div>
     );
   }
@@ -241,8 +231,6 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     });
   };
 
@@ -258,301 +246,348 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-[200px] lg:pt-[220px]">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-200 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <a href="#home" className="hover:text-blue-600 transition-colors">Home</a>
-            <ChevronRight size={14} />
-            <a href={`#category/${article.categories.slug}`} className="hover:text-blue-600 transition-colors">
-              {article.categories.name}
-            </a>
-            <ChevronRight size={14} />
-            <span className="text-gray-400 truncate max-w-xs">{article.title}</span>
+    <div className="min-h-screen bg-white">
+      {/* Reading Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#006633] to-[#00994d] z-50" style={{ width: `${scrollProgress}%` }}></div>
+
+      {/* Hero Section - Improved Layout */}
+      <div className="relative w-full bg-gray-900 pt-[200px] lg:pt-[220px]">
+        {/* Featured Image */}
+        <div className="relative h-[450px] lg:h-[550px] overflow-hidden bg-gray-800">
+          {article.featured_image && (
+            <img
+              src={article.featured_image}
+              alt={article.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Image failed to load:', article.featured_image);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          )}
+          {/* Gradient Overlay - Optimized for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20"></div>
+
+          {/* Top-Right Category & Breaking Badges */}
+          <div className="absolute top-6 right-6 lg:top-8 lg:right-8 flex items-center gap-3 z-20">
+            {article.is_breaking && (
+              <div className="px-3 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-full animate-pulse flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                Breaking
+              </div>
+            )}
+            {article.categories && (
+              <a 
+                href={`#category/${article.categories.slug}`}
+                className="px-3 py-1.5 bg-[#006633] text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-[#004d24] transition-colors"
+              >
+                {article.categories.name}
+              </a>
+            )}
+          </div>
+
+          {/* Article Headline & Metadata - Bottom Aligned */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent px-6 sm:px-8 py-12 sm:py-16">
+            <div className="max-w-4xl">
+          {/* Eyebrow - Category & Date Inline */}
+              <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
+                {article.categories && (
+                  <span className="text-[#00994d] text-xs font-bold uppercase tracking-widest truncate">{article.categories.name}</span>
+                )}
+                <span className="text-gray-400 text-xs">•</span>
+                <span className="text-gray-300 text-xs font-medium truncate">{formatDate(article.published_at)}</span>
+              </div>
+
+              {/* Main Headline */}
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
+                {article.title}
+              </h1>
+
+              {/* Subheading/Excerpt */}
+              {article.excerpt && (
+                <p className="text-base sm:text-lg text-gray-200 leading-relaxed max-w-3xl">
+                  {article.excerpt}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Article */}
-          <article className="lg:col-span-9">
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              {/* Featured Image */}
-              <div className="relative">
+      {/* Main Content Area */}
+      <div className="relative">
+        {/* Floating Social Share Bar */}
+        <div className="fixed left-0 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-3 p-4 z-40">
+          <button 
+            onClick={shareOnFacebook} 
+            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-blue-600 hover:bg-[#006633] hover:text-white transition-all"
+            title="Share on Facebook"
+          >
+            <Facebook size={20} />
+          </button>
+          <button 
+            onClick={shareOnTwitter} 
+            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-900 hover:bg-[#006633] hover:text-white transition-all"
+            title="Share on X/Twitter"
+          >
+            <Twitter size={20} />
+          </button>
+          <button 
+            onClick={shareOnWhatsApp} 
+            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-green-500 hover:bg-[#006633] hover:text-white transition-all"
+            title="Share on WhatsApp"
+          >
+            <MessageCircle size={20} />
+          </button>
+          <button 
+            onClick={shareByEmail} 
+            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-600 hover:bg-[#006633] hover:text-white transition-all"
+            title="Share via Email"
+          >
+            <Mail size={20} />
+          </button>
+          <button 
+            onClick={copyLink} 
+            className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${linkCopied ? 'bg-green-500 text-white' : 'bg-white text-gray-600 hover:bg-[#006633] hover:text-white'}`}
+            title={linkCopied ? 'Copied!' : 'Copy link'}
+          >
+            {linkCopied ? <Check size={20} /> : <Link2 size={20} />}
+          </button>
+        </div>
+
+        {/* Article Container - Single Column */}
+        <article className="max-w-2xl mx-auto px-6 sm:px-8 py-16">
+          
+          {/* Metadata Pill Badge */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-12 pb-8 border-b border-gray-200">
+            {article.authors && (
+              <a 
+                href={`#author/${article.author_id}`}
+                className="inline-flex items-center gap-3 px-6 py-3 bg-gray-100 rounded-full hover:bg-[#006633]/10 hover:border-[#006633] transition-all group cursor-pointer"
+              >
                 <img
-                  src={article.featured_image}
-                  alt={article.title}
-                  className="w-full h-[400px] object-cover"
+                  src={article.authors.avatar_url}
+                  alt={article.authors.name}
+                  className="w-10 h-10 rounded-full group-hover:ring-2 group-hover:ring-[#006633] transition-all"
                 />
-                <div className="absolute top-4 left-4">
-                  <a 
-                    href={`#category/${article.categories.slug}`}
-                    className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-blue-700 transition-colors"
-                  >
-                    {article.categories.name}
-                  </a>
+                <div className="text-sm">
+                  <p className="font-semibold text-gray-900 group-hover:text-[#006633] transition-colors">{article.authors.name}</p>
+                  <p className="text-gray-600">{formatDate(article.published_at)}</p>
                 </div>
-                {article.is_breaking && (
-                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full animate-pulse">
-                    <span className="w-2 h-2 bg-white rounded-full"></span>
-                    Breaking
-                  </div>
-                )}
-              </div>
+              </a>
+            )}
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <span className="flex items-center gap-1">
+                <Clock size={16} />
+                {article.reading_time} min read
+              </span>
+              <span className="hidden sm:flex items-center gap-1">
+                <Eye size={16} />
+                {article.views.toLocaleString()} views
+              </span>
+            </div>
+          </div>
 
-              {/* Article Content */}
-              <div className="p-6 sm:p-8 lg:p-10">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">
-                  {article.title}
-                </h1>
+          {/* Article Body - Premium Typography */}
+          {article.content ? (
+            <div 
+              className="article-content-premium prose prose-lg max-w-none
+                prose-p:font-[400] prose-p:text-[19px] prose-p:leading-8 prose-p:text-gray-800 prose-p:mb-7
+                prose-headings:font-serif prose-h2:text-4xl prose-h2:font-bold prose-h2:text-gray-900 prose-h2:mt-12 prose-h2:mb-6
+                prose-h3:text-2xl prose-h3:font-bold prose-h3:text-gray-900 prose-h3:mt-10 prose-h3:mb-5
+                prose-strong:font-semibold prose-strong:text-gray-900
+                prose-em:italic prose-em:text-gray-700
+                prose-ul:my-8 prose-ul:space-y-3 prose-ol:my-8 prose-ol:space-y-3
+                prose-li:text-[18px] prose-li:text-gray-800 prose-li:leading-relaxed
+                prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-gray-50 prose-blockquote:py-6 prose-blockquote:px-6 prose-blockquote:italic prose-blockquote:text-gray-700 prose-blockquote:text-[18px]
+                prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+                prose-img:rounded-lg prose-img:my-10 prose-img:shadow-sm prose-img:max-w-full
+                prose-code:bg-gray-100 prose-code:text-red-600 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:break-all
+                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:overflow-x-auto"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <p>No content available for this article.</p>
+            </div>
+          )}
 
-                <p className="text-xl text-gray-600 mb-6 leading-relaxed font-medium">
-                  {article.excerpt}
-                </p>
-
-                {/* Author & Meta */}
-                <div className="flex flex-wrap items-center gap-4 mb-8 pb-6 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={article.authors.avatar_url}
-                      alt={article.authors.name}
-                      className="w-12 h-12 rounded-full border-2 border-gray-100"
-                    />
-                    <div>
-                      <p className="font-bold text-gray-900">{article.authors.name}</p>
-                      <p className="text-sm text-gray-500">{formatDate(article.published_at)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-500 ml-auto">
-                    <span className="flex items-center gap-1">
-                      <Clock size={14} />
-                      {article.reading_time} min
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye size={14} />
-                      {article.views.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Article Body */}
-                <div 
-                  className="article-content prose prose-lg max-w-none 
-                    prose-headings:text-gray-900 prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4
-                    prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                    prose-p:text-gray-700 prose-p:leading-8 prose-p:mb-6 prose-p:text-[17px]
-                    prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-lg prose-img:my-8
-                    prose-a:text-red-600 prose-a:font-medium hover:prose-a:text-red-700
-                    prose-strong:text-gray-900 prose-strong:font-semibold
-                    prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2
-                    prose-li:text-gray-700 prose-li:leading-7
-                    prose-blockquote:border-l-4 prose-blockquote:border-red-500 prose-blockquote:bg-gray-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:italic prose-blockquote:text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
-                />
-
-                {/* Tags & Share */}
-                <div className="mt-10 pt-6 border-t border-gray-100">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">Share:</span>
-                      <button onClick={shareOnFacebook} className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors" title="Share on Facebook">
-                        <Facebook size={16} />
-                      </button>
-                      <button onClick={shareOnTwitter} className="p-2 bg-gray-900 text-white rounded-full hover:bg-black transition-colors" title="Share on X/Twitter">
-                        <Twitter size={16} />
-                      </button>
-                      <button onClick={shareOnWhatsApp} className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors" title="Share on WhatsApp">
-                        <MessageCircle size={16} />
-                      </button>
-                      <button onClick={shareByEmail} className="p-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-colors" title="Share via Email">
-                        <Mail size={16} />
-                      </button>
-                      <button 
-                        onClick={copyLink} 
-                        className={`p-2 rounded-full transition-colors ${linkCopied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-                        title={linkCopied ? 'Link copied!' : 'Copy link'}
-                      >
-                        {linkCopied ? <Check size={16} /> : <Link2 size={16} />}
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={handleLike}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-colors ${
-                          userLiked 
-                            ? 'bg-red-100 text-red-600' 
-                            : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
-                        }`}
-                      >
-                        <Heart size={16} fill={userLiked ? 'currentColor' : 'none'} />
-                        {likeCount}
-                      </button>
-                      <button className="p-2 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                        <Bookmark size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Short URL display */}
-                  <div className="mt-4 flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                    <Link2 size={16} className="text-gray-400 flex-shrink-0" />
-                    {isLoadingShortUrl ? (
-                      <span className="flex-1 text-sm text-gray-400">Generating short link...</span>
-                    ) : (
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={getShareUrl()} 
-                        className="flex-1 bg-transparent text-sm text-gray-600 outline-none font-mono"
-                      />
-                    )}
-                    <button 
-                      onClick={copyLink}
-                      disabled={isLoadingShortUrl}
-                      className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
-                        linkCopied 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
-                      }`}
-                    >
-                      {linkCopied ? 'Copied!' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Author Box */}
-                <div className="mt-8 bg-gray-50 rounded-xl p-6 flex items-start gap-4">
+          {/* Author Box - Glasmorphism Style */}
+          <div className="mt-16 pt-12 border-t border-gray-200">
+            {article.authors && (
+              <a 
+                href={`#author/${article.author_id}`}
+                className="block bg-gradient-to-br from-white to-gray-50 backdrop-blur-md rounded-2xl p-8 shadow-sm border border-gray-200 hover:border-[#006633] hover:shadow-lg transition-all group"
+              >
+                <div className="flex items-start gap-6">
                   <img
                     src={article.authors.avatar_url}
                     alt={article.authors.name}
-                    className="w-16 h-16 rounded-full border-2 border-white shadow-md"
+                    className="w-20 h-20 rounded-full border-4 border-[#006633] group-hover:ring-2 group-hover:ring-[#006633] transition-all flex-shrink-0"
                   />
-                  <div>
-                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">About the Author</p>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{article.authors.name}</h3>
-                    <p className="text-gray-600 text-sm">{article.authors.bio}</p>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-[#006633] uppercase tracking-widest mb-2">About Author</p>
+                    <h3 className="text-2xl font-serif font-bold text-gray-900 mb-3 group-hover:text-[#006633] transition-colors">{article.authors.name}</h3>
+                    <p className="text-gray-700 leading-relaxed">{article.authors.bio}</p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Comments Section */}
-            <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
-              <h3 className="flex items-center gap-2 text-xl font-bold text-gray-900 mb-6">
-                <MessageCircle size={20} />
-                Comments ({comments.length})
-              </h3>
-
-              {/* Comment Form */}
-              {isSubscribed ? (
-                <form onSubmit={handleComment} className="mb-8">
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                      {subscriberEmail?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                    <div className="flex-1">
-                      <textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Write a comment..."
-                        rows={3}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                      />
-                      {commentStatus === 'error' && (
-                        <div className="flex items-center gap-2 text-red-600 text-sm mt-2">
-                          <AlertCircle size={14} />
-                          {errorMessage}
-                        </div>
-                      )}
-                      {commentStatus === 'success' && (
-                        <div className="text-green-600 text-sm mt-2">Comment posted successfully!</div>
-                      )}
-                      <div className="flex justify-end mt-3">
-                        <button
-                          type="submit"
-                          disabled={commentStatus === 'loading' || !newComment.trim()}
-                          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <Send size={16} />
-                          {commentStatus === 'loading' ? 'Posting...' : 'Post Comment'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              ) : (
-                <div className="mb-8 bg-blue-50 rounded-xl p-6 text-center">
-                  <p className="text-gray-700 mb-3">Subscribe to join the conversation</p>
-                  <a
-                    href="#subscribe"
-                    className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Subscribe to Comment
-                  </a>
-                </div>
-              )}
-
-              {/* Comments List */}
-              {comments.length > 0 ? (
-                <div className="space-y-6">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold flex-shrink-0">
-                        {comment.author_name?.[0]?.toUpperCase() || 'A'}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900">{comment.author_name || 'Anonymous'}</span>
-                          <span className="text-sm text-gray-500">{formatCommentDate(comment.created_at)}</span>
-                        </div>
-                        <p className="text-gray-700">{comment.content}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No comments yet. Be the first to share your thoughts!
-                </div>
-              )}
-            </div>
-          </article>
-
-          {/* Sidebar */}
-          <aside className="lg:col-span-3 space-y-6">
-            {/* Related Articles */}
-            {relatedArticles.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm p-5 sticky top-[230px]">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 border-l-4 border-blue-600 pl-3">
-                  Related Articles
-                </h3>
-                <div className="space-y-4">
-                  {relatedArticles.map((relatedArticle) => (
-                    <NewsCard key={relatedArticle.id} article={relatedArticle} horizontal />
-                  ))}
-                </div>
-              </div>
+              </a>
             )}
+          </div>
 
-            {/* Subscribe CTA */}
-            {!isSubscribed && (
-              <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl p-6 text-white">
-                <h3 className="text-lg font-bold mb-2">Stay Updated</h3>
-                <p className="text-blue-200 text-sm mb-4">
-                  Get the latest news delivered to your inbox daily.
-                </p>
+          {/* Engagement Buttons - Glassmorphism Cards */}
+          <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button
+              onClick={handleLike}
+              className={`backdrop-blur-md rounded-2xl px-6 py-4 font-semibold transition-all text-center border ${
+                userLiked 
+                  ? 'bg-[#006633]/20 text-[#006633] border-[#006633]' 
+                  : 'bg-white/50 text-gray-700 border-gray-200 hover:bg-[#006633]/10 hover:border-[#006633]'
+              }`}
+            >
+              <Heart size={20} className="mx-auto mb-2" fill={userLiked ? 'currentColor' : 'none'} />
+              <div className="text-sm">{likeCount}</div>
+            </button>
+            <button 
+              onClick={shareOnFacebook} 
+              className="backdrop-blur-md rounded-2xl px-6 py-4 bg-white/50 text-gray-700 border border-gray-200 hover:bg-blue-50 hover:border-blue-200 transition-all"
+            >
+              <Facebook size={20} className="mx-auto mb-2" />
+              <div className="text-sm">Share</div>
+            </button>
+            <button 
+              onClick={shareOnTwitter} 
+              className="backdrop-blur-md rounded-2xl px-6 py-4 bg-white/50 text-gray-700 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all"
+            >
+              <Twitter size={20} className="mx-auto mb-2" />
+              <div className="text-sm">Tweet</div>
+            </button>
+            <button 
+              onClick={copyLink} 
+              className={`backdrop-blur-md rounded-2xl px-6 py-4 transition-all border ${linkCopied ? 'bg-green-100 text-green-600 border-green-300' : 'bg-white/50 text-gray-700 border-gray-200 hover:bg-green-50 hover:border-green-200'}`}
+            >
+              {linkCopied ? <Check size={20} className="mx-auto mb-2" /> : <Link2 size={20} className="mx-auto mb-2" />}
+              <div className="text-sm">{linkCopied ? 'Copied' : 'Copy'}</div>
+            </button>
+          </div>
+
+          {/* Comments Section */}
+          <div className="mt-16 pt-12 border-t border-gray-200">
+            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-8">Conversation ({comments.length})</h2>
+
+            {isSubscribed ? (
+              <form onSubmit={handleComment} className="mb-10">
+                <div className="flex gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#006633] flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {subscriberEmail?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Share your thoughts..."
+                      rows={4}
+                      className="w-full px-6 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#006633] focus:border-transparent resize-none bg-white text-[18px] placeholder-gray-500"
+                    />
+                    {commentStatus === 'error' && (
+                      <div className="flex items-center gap-2 text-red-600 text-sm mt-3">
+                        <AlertCircle size={16} />
+                        {errorMessage}
+                      </div>
+                    )}
+                    {commentStatus === 'success' && (
+                      <div className="text-green-600 text-sm mt-3">✓ Comment posted successfully</div>
+                    )}
+                    <div className="flex justify-end mt-4">
+                      <button
+                        type="submit"
+                        disabled={commentStatus === 'loading' || !newComment.trim()}
+                        className="flex items-center gap-2 px-8 py-3 bg-[#006633] text-white font-semibold rounded-full hover:bg-[#004d24] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Send size={18} />
+                        Post
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            ) : (
+              <div className="backdrop-blur-md bg-white/50 rounded-2xl p-8 text-center border border-gray-200 mb-10">
+                <p className="text-gray-700 mb-4 text-lg">Subscribe to join the conversation</p>
                 <a
                   href="#subscribe"
-                  className="block w-full text-center px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors"
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#006633] text-white font-semibold rounded-full hover:bg-[#004d24] transition-colors"
                 >
-                  Subscribe Now
+                  Subscribe
                 </a>
               </div>
             )}
-          </aside>
-        </div>
+
+            {/* Comments List */}
+            <div className="space-y-6">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-4 pb-6 border-b border-gray-100">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold flex-shrink-0">
+                      {comment.author_name?.[0]?.toUpperCase() || 'A'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-semibold text-gray-900">{comment.author_name || 'Reader'}</span>
+                        <span className="text-sm text-gray-500">{formatCommentDate(comment.created_at)}</span>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed text-[18px]">{comment.content}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
+                  <p>Be the first to share your thoughts</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Related Articles */}
+          {relatedArticles.length > 0 && (
+            <div className="mt-16 pt-12 border-t border-gray-200">
+              <h2 className="text-3xl font-serif font-bold text-gray-900 mb-8">Related Reading</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                {relatedArticles.slice(0, 2).map((article) => (
+                  <a 
+                    key={article.id}
+                    href={`#article/${article.slug}`}
+                    className="group backdrop-blur-md bg-white/70 border border-gray-200 rounded-2xl overflow-hidden hover:border-[#006633] hover:shadow-lg transition-all"
+                  >
+                    <div className="relative h-48 overflow-hidden bg-gray-300">
+                      {article.featured_image && (
+                        <img 
+                          src={article.featured_image} 
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            console.error('Related article image failed to load:', article.featured_image);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="p-6">
+                      {article.categories && (
+                        <span className="text-xs font-bold text-[#006633] uppercase tracking-widest">{article.categories.name}</span>
+                      )}
+                      <h3 className="font-serif text-xl font-bold text-gray-900 mt-3 mb-2 group-hover:text-[#006633] transition-colors">{article.title}</h3>
+                      {article.excerpt && (
+                        <p className="text-gray-700 text-sm">{article.excerpt}</p>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </article>
       </div>
     </div>
   );

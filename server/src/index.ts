@@ -109,6 +109,38 @@ app.get('/api/authors', async (req, res) => {
   }
 });
 
+// Get single author by ID
+app.get('/api/authors/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await query('SELECT id, name, bio, avatar_url, email, created_at FROM authors WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch author' });
+  }
+});
+
+// Get articles by author
+app.get('/api/articles/author/:authorId', async (req, res) => {
+  const { authorId } = req.params;
+  try {
+    const q = `SELECT ${ARTICLE_SELECT} FROM articles a 
+      JOIN categories c ON a.category_id = c.id 
+      JOIN authors au ON a.author_id = au.id 
+      WHERE a.author_id = $1 AND a.published_at IS NOT NULL
+      ORDER BY a.published_at DESC`;
+    const result = await query(q, [authorId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch author articles' });
+  }
+});
+
 app.get('/api/articles/slug/:slug', async (req, res) => {
   const { slug } = req.params;
   try {
