@@ -42,7 +42,7 @@ export default function BreakingNewsTicker() {
   if (breakingNews.length === 0 || !isVisible) return null;
 
   return (
-    <div className="bg-theme-accent text-white py-2 shadow-md sticky top-8 z-30">
+    <div className="bg-red-600 text-white py-2 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-1 flex-shrink-0 bg-white/20 px-2 py-1 rounded-full">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Header from './components/Header';
+import HeaderSimplified from './components/HeaderSimplified';
 import Footer from './components/Footer';
 import BreakingNewsTicker from './components/BreakingNewsTicker';
 import HomeCitizenLayout from './pages/HomeCitizenLayout';
@@ -247,11 +247,11 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       {!isAdminPage && (
         <div className="fixed top-0 left-0 right-0 z-50">
-          <Header />
+          <HeaderSimplified />
           <BreakingNewsTicker />
         </div>
       )}
-      <main>
+      <main className="pt-32">
         {renderPage()}
       </main>
       {!isAdminPage && <Footer />}

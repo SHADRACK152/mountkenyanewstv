@@ -99,7 +99,7 @@ export default function Home() {
 
       {/* FEATURED HEADLINE */}
       {currentArticle && (
-        <section className="bg-white border-b border-gray-200 pt-6">
+        <section className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-3 md:px-4 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Featured Image */}
