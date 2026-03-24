@@ -47,8 +47,8 @@ export default function Header() {
     <header className={`transition-all duration-300 ${
       isScrolled ? 'shadow-xl' : ''
     }`}>
-      {/* Top Bar - Compact */}
-      <div className="bg-theme-gradient">
+      {/* Top Bar - Compact and Sticky */}
+      <div className="bg-theme-gradient sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-8 text-xs">
             <div className="flex items-center space-x-4">
@@ -85,25 +85,25 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-12">
             {/* Logo */}
             <a href="#home" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-14 h-14 rounded-full shadow-lg border-2 border-gray-300 p-1 group-hover:scale-105 transition-transform duration-300 overflow-hidden flex items-center justify-center" style={{backgroundColor: '#ffffff'}}>
+                <div className="w-10 h-10 rounded-full shadow-md border border-gray-300 p-1 group-hover:scale-105 transition-transform duration-300 overflow-hidden flex items-center justify-center" style={{backgroundColor: '#ffffff'}}>
                   <img 
                     src="/mtker.png" 
                     alt="Mount Kenya News" 
-                    className="w-11 h-11 object-contain"
+                    className="w-8 h-8 object-contain"
                   />
                 </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm sm:text-lg font-black text-gray-900 dark:text-white tracking-tight">
                   Mount Kenya
                 </span>
-                <span className="text-xl sm:text-2xl font-black text-theme-accent tracking-tight leading-none">
+                <span className="text-sm sm:text-lg font-black text-theme-accent tracking-tight">
                   News
                 </span>
               </div>
@@ -117,31 +117,31 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search news..."
-                  className="w-full px-4 py-2.5 pl-11 bg-gray-100 border-0 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary focus:bg-white transition-all"
+                  className="w-full px-3 py-2 pl-10 bg-gray-100 border-0 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-theme-primary focus:bg-white transition-all"
                 />
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               </form>
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-theme-primary hover:bg-gray-100 rounded-full transition-colors"
+                className="lg:hidden p-1.5 text-gray-600 hover:text-theme-primary hover:bg-gray-100 rounded-full transition-colors"
               >
-                <Search size={22} />
+                <Search size={18} />
               </button>
               <a
                 href="#subscribe"
-                className="hidden sm:flex items-center px-5 py-2.5 bg-theme-accent text-white text-sm font-semibold rounded-full transition-colors shadow-md hover:shadow-lg"
+                className="hidden sm:flex items-center px-4 py-2 bg-theme-accent text-white text-xs font-semibold rounded-full transition-colors shadow-sm hover:shadow-md"
               >
                 Subscribe
               </a>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-theme-primary hover:bg-gray-100 rounded-full transition-colors"
+                className="lg:hidden p-1.5 text-gray-600 hover:text-theme-primary hover:bg-gray-100 rounded-full transition-colors"
               >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
           </div>

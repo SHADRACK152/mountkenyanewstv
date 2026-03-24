@@ -42,14 +42,14 @@ export default function BreakingNewsTicker() {
   if (breakingNews.length === 0 || !isVisible) return null;
 
   return (
-    <div className="bg-theme-accent text-white py-3 shadow-lg">
+    <div className="bg-theme-accent text-white py-2 shadow-md sticky top-8 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 flex-shrink-0 bg-white/20 px-3 py-1 rounded-full">
-            <AlertCircle size={16} className="animate-pulse" />
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1 flex-shrink-0 bg-white/20 px-2 py-1 rounded-full">
+            <AlertCircle size={14} className="animate-pulse" />
             <span className="font-bold text-xs uppercase tracking-wider">Breaking</span>
           </div>
-          <div className="flex-1 overflow-hidden relative h-6">
+          <div className="flex-1 overflow-hidden relative h-5">
             {breakingNews.map((article, index) => (
               <a 
                 key={article.id}
@@ -58,7 +58,7 @@ export default function BreakingNewsTicker() {
                   index === currentIndex ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                <span className="text-sm font-medium">{article.title}</span>
+                <span className="text-xs font-medium">{article.title}</span>
               </a>
             ))}
           </div>
@@ -67,18 +67,18 @@ export default function BreakingNewsTicker() {
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
                   index === currentIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'
                 }`}
               />
             ))}
             <button
               onClick={handleHide}
-              className="ml-2 p-1 hover:bg-white/20 rounded-md transition-colors"
+              className="ml-1 p-1 hover:bg-white/20 rounded-md transition-colors"
               title="Hide breaking news"
               aria-label="Hide breaking news"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           </div>
         </div>
