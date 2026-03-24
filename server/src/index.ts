@@ -634,6 +634,62 @@ app.post('/api/articles/:id/like', async (req, res) => {
   }
 });
 
+// ========== DYNAMIC SITEMAP ==========
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const baseUrl = 'https://www.mtkenyanews.com';
+
+    // Fetch published articles
+    const articlesRes = await query(
+      `SELECT slug, COALESCE(updated_at, published_at) as lastmod FROM articles WHERE published_at IS NOT NULL ORDER BY published_at DESC`
+    );
+    const articles = articlesRes.rows || [];
+
+    // Fetch categories
+    const categoriesRes = await query(`SELECT slug, created_at as lastmod FROM categories`);
+    const categories = categoriesRes.rows || [];
+
+    // Fetch active polls
+    const pollsRes = await query(`SELECT id, COALESCE(updated_at, created_at) as lastmod FROM polls WHERE status = 'active'`);
+    const polls = pollsRes.rows || [];
+
+    // Static pages
+    const staticPages = [
+      { loc: `${baseUrl}/`, lastmod: null },
+      { loc: `${baseUrl}/#about`, lastmod: null },
+      { loc: `${baseUrl}/#contact`, lastmod: null },
+      { loc: `${baseUrl}/#careers`, lastmod: null },
+      { loc: `${baseUrl}/#polls`, lastmod: null },
+      { loc: `${baseUrl}/#privacy`, lastmod: null },
+      { loc: `${baseUrl}/#terms`, lastmod: null },
+    ];
+
+    // Build URLs
+    const articleUrls = articles.map(a => ({ loc: `${baseUrl}/#article/${encodeURIComponent(a.slug)}`, lastmod: a.lastmod }));
+    const categoryUrls = categories.map(c => ({ loc: `${baseUrl}/#category/${encodeURIComponent(c.slug)}`, lastmod: c.lastmod }));
+    const pollUrls = polls.map(p => ({ loc: `${baseUrl}/#poll/${encodeURIComponent(p.id)}`, lastmod: p.lastmod }));
+
+    const allUrls = [...staticPages, ...articleUrls, ...categoryUrls, ...pollUrls];
+    
+    const urlsXml = allUrls.map(u => {
+      const lastmod = u.lastmod ? `\n    <lastmod>${new Date(u.lastmod).toISOString().split('T')[0]}</lastmod>` : '';
+      return `  <url>\n    <loc>${u.loc}</loc>${lastmod}\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
+    }).join('\n');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urlsXml}
+</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    return res.status(200).send(xml);
+  } catch (err: any) {
+    console.error('Failed to generate sitemap:', err);
+    return res.status(500).json({ error: 'Failed to generate sitemap' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Neon API listening on ${PORT}`);
 });

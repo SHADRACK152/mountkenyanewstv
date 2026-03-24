@@ -57,7 +57,7 @@ const ARTICLE_SQL = `
   a.id, a.title, a.slug, a.excerpt, a.content, a.featured_image, a.category_id, a.author_id,
   a.published_at, a.reading_time, a.views, a.is_featured, a.is_breaking, a.created_at, a.updated_at,
   json_build_object('id', c.id, 'name', c.name, 'slug', c.slug, 'description', c.description) as categories,
-  json_build_object('id', au.id, 'name', au.name, 'bio', au.bio, 'avatar_url', au.avatar_url) as authors
+  json_build_object('id', au.id, 'name', au.name, 'bio', au.bio, 'avatar_url', au.avatar_url, 'email', au.email, 'education', au.education, 'experience', au.experience, 'specialization', au.specialization, 'location', au.location) as authors
 `;
 
 // Main Handler
@@ -497,6 +497,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json(r.rows);
     }
 
+    // Get single author by ID
+    const authorIdMatch = path.match(/^\/api\/authors\/([^/]+)$/);
+    if (authorIdMatch && method === 'GET') {
+      const id = authorIdMatch[1];
+      const r = await query('SELECT * FROM authors WHERE id=$1', [id]);
+      return res.json(r.rows[0] || null);
+    }
+
     // Articles list
     if (path === '/api/articles') {
       const { featured, trending, limit, category_id } = req.query;
@@ -534,6 +542,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const r = await query(
         `SELECT ${ARTICLE_SQL} FROM articles a JOIN categories c ON a.category_id=c.id JOIN authors au ON a.author_id=au.id WHERE a.category_id=$1 AND a.id<>$2 ORDER BY a.published_at DESC LIMIT $3`,
         [category_id, exclude_id, parseInt((limit as string) || '3', 10)]
+      );
+      return res.json(r.rows);
+    }
+
+    // Articles by author
+    const authorArticlesMatch = path.match(/^\/api\/articles\/author\/([^/]+)$/);
+    if (authorArticlesMatch && method === 'GET') {
+      const authorId = authorArticlesMatch[1];
+      const limit = parseInt((req.query.limit as string) || '10', 10);
+      const r = await query(
+        `SELECT ${ARTICLE_SQL} FROM articles a JOIN categories c ON a.category_id=c.id JOIN authors au ON a.author_id=au.id WHERE a.author_id=$1 ORDER BY a.published_at DESC LIMIT $2`,
+        [authorId, limit]
       );
       return res.json(r.rows);
     }
@@ -824,8 +844,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Admin authors
     if (path === '/api/admin/authors' && method === 'POST') {
-      const { name, email, bio, avatar_url } = req.body;
-      const r = await query('INSERT INTO authors (name,email,bio,avatar_url) VALUES ($1,$2,$3,$4) RETURNING *', [name, email, bio, avatar_url]);
+      const { name, email, bio, avatar_url, education, experience, specialization, location } = req.body;
+      const r = await query('INSERT INTO authors (name,email,bio,avatar_url,education,experience,specialization,location) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *', [name, email, bio, avatar_url, education, experience, specialization, location]);
       return res.json(r.rows[0]);
     }
 
@@ -833,8 +853,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (adminAuthMatch) {
       const id = adminAuthMatch[1];
       if (method === 'PUT') {
-        const { name, email, bio, avatar_url } = req.body;
-        const r = await query('UPDATE authors SET name=$1,email=$2,bio=$3,avatar_url=$4 WHERE id=$5 RETURNING *', [name, email, bio, avatar_url, id]);
+        const { name, email, bio, avatar_url, education, experience, specialization, location } = req.body;
+        const r = await query('UPDATE authors SET name=$1,email=$2,bio=$3,avatar_url=$4,education=$5,experience=$6,specialization=$7,location=$8 WHERE id=$9 RETURNING *', [name, email, bio, avatar_url, education, experience, specialization, location, id]);
         return res.json(r.rows[0]);
       }
       if (method === 'DELETE') {
@@ -871,6 +891,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (delSubMatch && method === 'DELETE') {
       await query('DELETE FROM subscribers WHERE id=$1', [delSubMatch[1]]);
       return res.json({ ok: true });
+    }
+
+    // ===== DYNAMIC SITEMAP =====
+    if (path === '/sitemap.xml' && method === 'GET') {
+      try {
+        const baseUrl = 'https://www.mtkenyanews.com';
+
+        // Fetch published articles
+        const articlesRes = await query(
+          `SELECT slug, COALESCE(updated_at, published_at) as lastmod FROM articles WHERE published_at IS NOT NULL ORDER BY published_at DESC`
+        );
+        const articles = articlesRes.rows || [];
+
+        // Fetch categories
+        const categoriesRes = await query(`SELECT slug, created_at as lastmod FROM categories`);
+        const categories = categoriesRes.rows || [];
+
+        // Fetch active polls
+        const pollsRes = await query(`SELECT id, COALESCE(updated_at, created_at) as lastmod FROM polls WHERE status = 'active'`);
+        const polls = pollsRes.rows || [];
+
+        // Static pages
+        const staticPages = [
+          { loc: `${baseUrl}/`, lastmod: null },
+          { loc: `${baseUrl}/#about`, lastmod: null },
+          { loc: `${baseUrl}/#contact`, lastmod: null },
+          { loc: `${baseUrl}/#careers`, lastmod: null },
+          { loc: `${baseUrl}/#polls`, lastmod: null },
+          { loc: `${baseUrl}/#privacy`, lastmod: null },
+          { loc: `${baseUrl}/#terms`, lastmod: null },
+        ];
+
+        // Build sitemap XML
+        const urlToXml = (item: any, isSPA = false) => {
+          const locPath = isSPA ? item.loc : item.loc;
+          const lastmod = item.lastmod ? `<lastmod>${new Date(item.lastmod).toISOString().split('T')[0]}</lastmod>` : '';
+          return `  <url>\n    <loc>${locPath}</loc>${lastmod ? '\n    ' + lastmod : ''}\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
+        };
+
+        const articleUrls = articles.map(a => ({ loc: `${baseUrl}/#article/${encodeURIComponent(a.slug)}`, lastmod: a.lastmod }));
+        const categoryUrls = categories.map(c => ({ loc: `${baseUrl}/#category/${encodeURIComponent(c.slug)}`, lastmod: c.lastmod }));
+        const pollUrls = polls.map(p => ({ loc: `${baseUrl}/#poll/${encodeURIComponent(p.id)}`, lastmod: p.lastmod }));
+
+        const allUrls = [...staticPages, ...articleUrls, ...categoryUrls, ...pollUrls];
+        const urlsXml = allUrls.map(u => urlToXml(u)).join('\n');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urlsXml}
+</urlset>`;
+
+        res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        return res.status(200).send(xml);
+      } catch (err: any) {
+        console.error('Failed to generate sitemap:', err);
+        return res.status(500).json({ error: 'Failed to generate sitemap' });
+      }
     }
 
     // Admin: trigger sitemap generation via server (runs scripts/generate-sitemaps.js)
