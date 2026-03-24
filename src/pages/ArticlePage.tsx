@@ -283,25 +283,27 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
             )}
 
             {/* Article Content */}
-            <article 
-              className="prose prose-sm md:prose-base lg:prose-lg w-full max-w-full mb-12
-                prose-headings:font-serif prose-headings:font-bold prose-headings:text-gray-900
-                prose-h1:text-2xl md:prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
-                prose-h2:text-xl md:prose-h2:text-2xl prose-h2:mt-6 prose-h2:mb-3
-                prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
-                prose-p:text-gray-700 prose-p:leading-8 prose-p:mb-6 prose-p:text-left prose-p:break-words
-                prose-strong:text-gray-900 prose-strong:font-bold
-                prose-em:text-gray-800
-                prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-[#006633]/5 prose-blockquote:py-4 prose-blockquote:px-4 prose-blockquote:italic
-                prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline prose-a:break-words
-                prose-img:rounded-lg prose-img:my-8 prose-img:w-full prose-img:max-w-full prose-img:h-auto
-                prose-ul:my-6 prose-ul:space-y-3 prose-ol:my-6 prose-ol:space-y-3
-                prose-li:text-gray-700 prose-li:leading-relaxed prose-li:break-words
-                prose-code:bg-gray-100 prose-code:text-[#006633] prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:break-words
-                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
-                prose-hr:my-8 prose-hr:border-gray-300"
-              dangerouslySetInnerHTML={{ __html: article.content || '<p>No content available.</p>' }}
-            />
+            <div className="w-full overflow-hidden">
+              <article 
+                className="prose prose-sm md:prose-base lg:prose-lg w-full max-w-full mb-12
+                  prose-headings:font-serif prose-headings:font-bold prose-headings:text-gray-900 prose-headings:w-full prose-headings:break-words
+                  prose-h1:text-2xl md:prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
+                  prose-h2:text-xl md:prose-h2:text-2xl prose-h2:mt-6 prose-h2:mb-3
+                  prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
+                  prose-p:text-gray-700 prose-p:leading-8 prose-p:mb-6 prose-p:text-left prose-p:break-words prose-p:w-full
+                  prose-strong:text-gray-900 prose-strong:font-bold
+                  prose-em:text-gray-800
+                  prose-blockquote:border-l-4 prose-blockquote:border-[#006633] prose-blockquote:bg-[#006633]/5 prose-blockquote:py-4 prose-blockquote:px-4 prose-blockquote:italic prose-blockquote:w-full prose-blockquote:break-words
+                  prose-a:text-[#006633] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline prose-a:break-all
+                  prose-img:rounded-lg prose-img:my-8 prose-img:w-full prose-img:max-w-full prose-img:h-auto
+                  prose-ul:my-6 prose-ul:space-y-3 prose-ul:w-full prose-ol:my-6 prose-ol:space-y-3 prose-ol:w-full
+                  prose-li:text-gray-700 prose-li:leading-relaxed prose-li:break-words
+                  prose-code:bg-gray-100 prose-code:text-[#006633] prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:break-all
+                  prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:w-full
+                  prose-hr:my-8 prose-hr:border-gray-300"
+                dangerouslySetInnerHTML={{ __html: article.content || '<p>No content available.</p>' }}
+              />
+            </div>
 
             {/* Share & Like Section */}
             <div className="bg-gray-100 rounded-lg p-6 mb-12 flex flex-wrap items-center justify-between gap-4">
