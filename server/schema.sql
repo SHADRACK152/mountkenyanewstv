@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS authors (
     email VARCHAR(255) DEFAULT NULL UNIQUE,
     bio TEXT DEFAULT '',
     avatar_url TEXT DEFAULT '',
+    specialization VARCHAR(200) DEFAULT '',
+    location VARCHAR(200) DEFAULT '',
+    education TEXT DEFAULT '',
+    experience TEXT DEFAULT '',
+    social_twitter TEXT DEFAULT '',
+    social_facebook TEXT DEFAULT '',
+    social_linkedin TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -91,6 +98,15 @@ CREATE INDEX IF NOT EXISTS idx_articles_breaking ON articles(is_breaking);
 CREATE INDEX IF NOT EXISTS idx_articles_slug ON articles(slug);
 CREATE INDEX IF NOT EXISTS idx_comments_article ON comments(article_id);
 CREATE INDEX IF NOT EXISTS idx_likes_article ON article_likes(article_id);
+
+-- Alter authors table to add new fields (if they don't exist)
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS specialization VARCHAR(200) DEFAULT '';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS location VARCHAR(200) DEFAULT '';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS education TEXT DEFAULT '';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS experience TEXT DEFAULT '';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS social_twitter TEXT DEFAULT '';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS social_facebook TEXT DEFAULT '';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS social_linkedin TEXT DEFAULT '';
 
 -- Insert default categories
 INSERT INTO categories (name, slug, description) VALUES

@@ -325,12 +325,12 @@ app.delete('/api/admin/categories/:id', adminMiddleware, async (req, res) => {
 // =====================
 
 app.post('/api/admin/authors', adminMiddleware, async (req, res) => {
-  const { name, email, bio, avatar_url } = req.body || {};
+  const { name, email, bio, avatar_url, specialization, location, education, experience, social_twitter, social_facebook, social_linkedin } = req.body || {};
   if (!name) return res.status(400).json({ error: 'Name required' });
   try {
     const result = await query(
-      'INSERT INTO authors (name, email, bio, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, email || null, bio || null, avatar_url || null]
+      'INSERT INTO authors (name, email, bio, avatar_url, specialization, location, education, experience, social_twitter, social_facebook, social_linkedin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+      [name, email || null, bio || null, avatar_url || null, specialization || null, location || null, education || null, experience || null, social_twitter || null, social_facebook || null, social_linkedin || null]
     );
     res.json(result.rows[0]);
   } catch (err: any) {
@@ -342,7 +342,7 @@ app.post('/api/admin/authors', adminMiddleware, async (req, res) => {
 
 app.put('/api/admin/authors/:id', adminMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { name, email, bio, avatar_url } = req.body || {};
+  const { name, email, bio, avatar_url, specialization, location, education, experience, social_twitter, social_facebook, social_linkedin } = req.body || {};
   try {
     const fields: string[] = [];
     const params: any[] = [];
@@ -351,6 +351,13 @@ app.put('/api/admin/authors/:id', adminMiddleware, async (req, res) => {
     if (email !== undefined) { fields.push(`email = $${idx++}`); params.push(email || null); }
     if (bio !== undefined) { fields.push(`bio = $${idx++}`); params.push(bio); }
     if (avatar_url !== undefined) { fields.push(`avatar_url = $${idx++}`); params.push(avatar_url); }
+    if (specialization !== undefined) { fields.push(`specialization = $${idx++}`); params.push(specialization); }
+    if (location !== undefined) { fields.push(`location = $${idx++}`); params.push(location); }
+    if (education !== undefined) { fields.push(`education = $${idx++}`); params.push(education); }
+    if (experience !== undefined) { fields.push(`experience = $${idx++}`); params.push(experience); }
+    if (social_twitter !== undefined) { fields.push(`social_twitter = $${idx++}`); params.push(social_twitter); }
+    if (social_facebook !== undefined) { fields.push(`social_facebook = $${idx++}`); params.push(social_facebook); }
+    if (social_linkedin !== undefined) { fields.push(`social_linkedin = $${idx++}`); params.push(social_linkedin); }
     if (fields.length === 0) return res.status(400).json({ error: 'No fields' });
     params.push(id);
     const q = `UPDATE authors SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;

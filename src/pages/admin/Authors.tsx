@@ -11,6 +11,13 @@ interface Author {
   email?: string;
   bio?: string;
   avatar_url?: string;
+  specialization?: string;
+  location?: string;
+  education?: string;
+  experience?: string;
+  social_twitter?: string;
+  social_facebook?: string;
+  social_linkedin?: string;
 }
 
 export default function AdminAuthors() {
@@ -22,7 +29,14 @@ export default function AdminAuthors() {
     name: '', 
     email: '', 
     bio: '', 
-    avatar_url: ''
+    avatar_url: '',
+    specialization: '',
+    location: '',
+    education: '',
+    experience: '',
+    social_twitter: '',
+    social_facebook: '',
+    social_linkedin: ''
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -63,7 +77,14 @@ export default function AdminAuthors() {
         name: '', 
         email: '', 
         bio: '', 
-        avatar_url: ''
+        avatar_url: '',
+        specialization: '',
+        location: '',
+        education: '',
+        experience: '',
+        social_twitter: '',
+        social_facebook: '',
+        social_linkedin: ''
       });
       await load();
     } catch (e) {
@@ -79,7 +100,14 @@ export default function AdminAuthors() {
       name: author.name, 
       email: author.email || '', 
       bio: author.bio || '', 
-      avatar_url: author.avatar_url || ''
+      avatar_url: author.avatar_url || '',
+      specialization: author.specialization || '',
+      location: author.location || '',
+      education: author.education || '',
+      experience: author.experience || '',
+      social_twitter: author.social_twitter || '',
+      social_facebook: author.social_facebook || '',
+      social_linkedin: author.social_linkedin || ''
     });
     setEditingId(author.id);
     setShowForm(true);
@@ -103,7 +131,14 @@ export default function AdminAuthors() {
       name: '', 
       email: '', 
       bio: '', 
-      avatar_url: ''
+      avatar_url: '',
+      specialization: '',
+      location: '',
+      education: '',
+      experience: '',
+      social_twitter: '',
+      social_facebook: '',
+      social_linkedin: ''
     });
   };
 
@@ -279,6 +314,80 @@ export default function AdminAuthors() {
                         placeholder="Brief bio about the author..."
                       />
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                        <input
+                          type="text"
+                          value={formData.specialization}
+                          onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="e.g., Political Correspondent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <input
+                          type="text"
+                          value={formData.location}
+                          onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="e.g., Nairobi, Kenya"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
+                      <textarea
+                        value={formData.education}
+                        onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value }))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder="e.g., Bachelor's in Journalism, University of Nairobi"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Experience</label>
+                      <textarea
+                        value={formData.experience}
+                        onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder="e.g., 10 years in journalism, covered national elections"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Twitter</label>
+                        <input
+                          type="text"
+                          value={formData.social_twitter}
+                          onChange={(e) => setFormData(prev => ({ ...prev, social_twitter: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="@username"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+                        <input
+                          type="text"
+                          value={formData.social_facebook}
+                          onChange={(e) => setFormData(prev => ({ ...prev, social_facebook: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="username"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                        <input
+                          type="text"
+                          value={formData.social_linkedin}
+                          onChange={(e) => setFormData(prev => ({ ...prev, social_linkedin: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="username"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-end gap-3 pt-4 border-t">
@@ -327,14 +436,51 @@ export default function AdminAuthors() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900">{author.name}</h3>
                       <div className="space-y-1 mt-1">
+                        {author.specialization && (
+                          <p className="text-xs font-medium text-blue-600 uppercase tracking-widest">{author.specialization}</p>
+                        )}
                         {author.email && (
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <Mail size={14} />
                             {author.email}
                           </div>
                         )}
+                        {author.location && (
+                          <p className="text-sm text-gray-500">
+                            <span className="font-medium">Location:</span> {author.location}
+                          </p>
+                        )}
                         {author.bio && (
                           <p className="text-sm text-gray-500 line-clamp-2">{author.bio}</p>
+                        )}
+                        {author.education && (
+                          <p className="text-xs text-gray-400">
+                            <span className="font-medium">Education:</span> {author.education}
+                          </p>
+                        )}
+                        {author.experience && (
+                          <p className="text-xs text-gray-400">
+                            <span className="font-medium">Experience:</span> {author.experience}
+                          </p>
+                        )}
+                        {(author.social_twitter || author.social_facebook || author.social_linkedin) && (
+                          <div className="flex gap-2 mt-2">
+                            {author.social_twitter && (
+                              <a href={`https://twitter.com/${author.social_twitter}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                                🐦 {author.social_twitter}
+                              </a>
+                            )}
+                            {author.social_facebook && (
+                              <a href={`https://facebook.com/${author.social_facebook}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                                fb
+                              </a>
+                            )}
+                            {author.social_linkedin && (
+                              <a href={`https://linkedin.com/in/${author.social_linkedin}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                                in
+                              </a>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
