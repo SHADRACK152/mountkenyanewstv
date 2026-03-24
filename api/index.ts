@@ -57,7 +57,7 @@ const ARTICLE_SQL = `
   a.id, a.title, a.slug, a.excerpt, a.content, a.featured_image, a.category_id, a.author_id,
   a.published_at, a.reading_time, a.views, a.is_featured, a.is_breaking, a.created_at, a.updated_at,
   json_build_object('id', c.id, 'name', c.name, 'slug', c.slug, 'description', c.description) as categories,
-  json_build_object('id', au.id, 'name', au.name, 'bio', au.bio, 'avatar_url', au.avatar_url, 'email', au.email, 'education', au.education, 'experience', au.experience, 'specialization', au.specialization, 'location', au.location) as authors
+  json_build_object('id', au.id, 'name', au.name, 'bio', au.bio, 'avatar_url', au.avatar_url, 'email', au.email) as authors
 `;
 
 // Main Handler
