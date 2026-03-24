@@ -251,7 +251,7 @@ function App() {
           <BreakingNewsTicker />
         </div>
       )}
-      <main className="pt-32">
+      <main className="pt-20">
         {renderPage()}
       </main>
       {!isAdminPage && <Footer />}
