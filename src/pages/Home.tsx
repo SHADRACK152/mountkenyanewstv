@@ -13,6 +13,7 @@ export default function Home() {
   const [latestArticles, setLatestArticles] = useState<ArticleWithRelations[]>([]);
   const [email, setEmail] = useState('');
   const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [subscribeError, setSubscribeError] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -51,13 +52,33 @@ export default function Home() {
     e.preventDefault();
     if (!email.trim()) return;
     setSubscribeStatus('loading');
+    setSubscribeError('');
     try {
-      // TODO: Implement subscribe API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      const res = await fetch(`${API}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), name: '' }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Subscription failed');
+      }
+
       setSubscribeStatus('success');
+      // Store subscription in localStorage
+      localStorage.setItem('subscriber_email', email.trim());
       setEmail('');
-    } catch {
+      
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setSubscribeStatus('idle');
+      }, 3000);
+    } catch (err: any) {
       setSubscribeStatus('error');
+      setSubscribeError(err.message || 'Subscription failed. Please try again.');
+      console.error(err);
     }
   };
 
@@ -335,6 +356,9 @@ export default function Home() {
                   {subscribeStatus === 'loading' ? 'Subscribing...' : 'Subscribe Free'}
                 </button>
               </form>
+              {subscribeStatus === 'error' && (
+                <p className="text-red-300 text-sm text-center mt-3">✗ {subscribeError}</p>
+              )}
               {subscribeStatus === 'success' && (
                 <p className="text-green-300 text-sm text-center mt-3">✓ Successfully subscribed!</p>
               )}
