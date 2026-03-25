@@ -38,9 +38,9 @@ async function main() {
 
     const toUrl = (loc, lastmod) => ({ loc, lastmod: lastmod ? new Date(lastmod).toISOString().split('T')[0] : null });
 
-    const articleUrls = articles.map((r) => toUrl(`${baseUrl}/#article/${encodeURIComponent(r.slug)}`, r.lastmod));
+    const articleUrls = articles.map((r) => toUrl(`${baseUrl}/article/${encodeURIComponent(r.slug)}`, r.lastmod));
     const categoryUrls = categories.map((c) => toUrl(`${baseUrl}/#category/${encodeURIComponent(c.slug)}`, c.lastmod));
-    const pollUrls = polls.map((p) => toUrl(`${baseUrl}/#poll/${encodeURIComponent(p.id)}`, p.lastmod));
+    const pollUrls = polls.map((p) => toUrl(`${baseUrl}/p/${encodeURIComponent(p.id)}`, p.lastmod));
 
     const staticPages = [
       toUrl(`${baseUrl}/`, null),
@@ -59,7 +59,8 @@ async function main() {
       const body = urls
         .map((u) => {
           const last = u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : '';
-          return `  <url>\n    <loc>${u.loc}</loc>${last}\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
+          const priority = u.loc.includes('/article/') ? '0.9' : u.loc.includes('/p/') ? '0.7' : '0.9';
+          return `  <url>\n    <loc>${u.loc}</loc>${last}\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
         })
         .join('\n');
       await fs.writeFile(filePath, header + body + '\n' + footer, 'utf8');
@@ -90,6 +91,11 @@ async function main() {
     const indexHeader = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     const indexFooter = '</sitemapindex>';
     const indexBody = sitemaps.map((s) => `  <sitemap>\n    <loc>${baseUrl}/${s}</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`).join('\n');
+    console.log('\nSitemap URLs generated:');
+    console.log(`- Articles: ${articleUrls.length} URLs`);
+    console.log(`- Categories: ${categoryUrls.length} URLs`);
+    console.log(`- Polls: ${pollUrls.length} URLs`);
+    console.log(`- Static pages: ${staticPages.length} URLs`);
     await fs.writeFile('public/sitemap-index.xml', indexHeader + indexBody + '\n' + indexFooter, 'utf8');
 
     console.log('Sitemap generation complete. Files written to public/');
