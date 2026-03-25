@@ -193,6 +193,14 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
     window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(article?.title || '')}&via=mtkenyanews`, '_blank', 'width=600,height=400');
   };
 
+  const shareOnWhatsApp = () => {
+    const url = getShareUrl();
+    // WhatsApp will unfurl the link and show the image from og:image meta tag
+    // Format: link first so preview shows, then title and excerpt
+    const text = `${url}\n\n📰 *${article?.title || ''}*\n\n${article?.excerpt || ''}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(getShareUrl());

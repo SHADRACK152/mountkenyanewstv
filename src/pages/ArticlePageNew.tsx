@@ -241,7 +241,9 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
 
   const shareOnWhatsApp = () => {
     const url = getShareUrl();
-    const text = `📰 *${article?.title || ''}*\n\n${article?.excerpt || ''}\n\n👉 Read more: ${url}`;
+    // WhatsApp will unfurl the link and show the image from og:image meta tag
+    // Format: link first so preview shows, then title and excerpt
+    const text = `${url}\n\n📰 *${article?.title || ''}*\n\n${article?.excerpt || ''}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
