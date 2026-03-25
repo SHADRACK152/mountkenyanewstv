@@ -14,6 +14,10 @@
       "destination": "/api"
     },
     {
+      "source": "/article/:slug",
+      "destination": "/api?article=:slug"
+    },
+    {
       "source": "/s/:code",
       "destination": "/api?shortlink=:code"
     },
