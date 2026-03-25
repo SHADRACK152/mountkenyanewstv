@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { Clock, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Send, AlertCircle, Link2, Check, Tag, Share2, Instagram, Linkedin, Share } from 'lucide-react';
+import { Clock, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Send, AlertCircle, Link2, Check, Tag, Share2, Instagram, Linkedin, Share, Copy } from 'lucide-react';
 import * as api from '../lib/api';
 import { updateMetaTags, updateCanonicalUrl } from '../lib/seo';
 import type { ArticleWithRelations } from '../lib/database.types';
@@ -29,6 +29,8 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [shortLink, setShortLink] = useState<string | null>(null);
+  const [shortLinkCopied, setShortLinkCopied] = useState(false);
 
   const subscriberEmail = localStorage.getItem('subscriber_email');
   const isSubscribed = !!subscriberEmail;
@@ -84,6 +86,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
 
         fetchComments(article.id);
         fetchLikes(article.id);
+        fetchShortLink(article.id);
       } else {
         setArticle(null);
       }
@@ -118,6 +121,20 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
       }
     } catch (err) {
       console.error('Failed to fetch likes:', err);
+    }
+  };
+
+  const fetchShortLink = async (articleId: string) => {
+    try {
+      const res = await fetch(`${API}/api/short-links?article_id=${articleId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.code) {
+          setShortLink(data.short_url);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch short link:', err);
     }
   };
 
@@ -242,6 +259,24 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
       document.body.removeChild(textArea);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+
+  const copyShortLink = async () => {
+    if (!shortLink) return;
+    try {
+      await navigator.clipboard.writeText(shortLink);
+      setShortLinkCopied(true);
+      setTimeout(() => setShortLinkCopied(false), 2000);
+    } catch (err) {
+      const textArea = document.createElement('textarea');
+      textArea.value = shortLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShortLinkCopied(true);
+      setTimeout(() => setShortLinkCopied(false), 2000);
     }
   };
 
@@ -406,6 +441,29 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                   {linkCopied ? <Check size={20} className="text-green-600" /> : <Link2 size={20} className="text-gray-700" />}
                 </button>
               </div>
+
+              {/* Short Link */}
+              {shortLink && (
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-blue-900 mb-2">SHORT LINK</p>
+                      <p className="text-sm font-mono text-blue-700 break-all">{shortLink}</p>
+                    </div>
+                    <button
+                      onClick={copyShortLink}
+                      className={`flex-shrink-0 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                        shortLinkCopied
+                          ? 'bg-green-600 text-white'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      {shortLinkCopied ? <Check className="inline mr-2" size={16} /> : <Copy className="inline mr-2" size={16} />}
+                      {shortLinkCopied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Tags */}
