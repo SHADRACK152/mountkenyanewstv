@@ -13,6 +13,10 @@ export default defineConfig({
         target: 'http://localhost:4000',
         changeOrigin: true,
       },
+      '/article': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
       '/sitemap.xml': {
         target: 'http://localhost:4000',
         changeOrigin: true,

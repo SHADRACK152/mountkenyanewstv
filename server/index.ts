@@ -138,6 +138,80 @@ app.post('/api/articles/:id/views', async (req, res) => {
   }
 });
 
+// Serve article pages with proper Open Graph meta tags for social media sharing
+app.get('/article/:slug', async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const { rows } = await pool.query(
+      `SELECT a.*, c.id as cat_id, c.name as cat_name, c.slug as cat_slug, c.description as cat_description,
+        au.id as auth_id, au.name as auth_name, au.bio as auth_bio, au.avatar_url as auth_avatar_url, au.created_at as auth_created_at
+        FROM articles a
+        LEFT JOIN categories c ON a.category_id = c.id
+        LEFT JOIN authors au ON a.author_id = au.id
+        WHERE a.slug = $1`,
+      [slug]
+    );
+
+    const article = rows[0];
+    if (!article) {
+      return res.status(404).send('Article not found');
+    }
+
+    const title = article.title;
+    const description = article.excerpt || article.content?.substring(0, 160) || 'Read this article on Mount Kenya News';
+    const image = article.featured_image || 'https://www.mtkenyanews.com/mtker.png';
+    const pageUrl = `https://www.mtkenyanews.com/#article/${slug}`;
+    const canonical = pageUrl;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="https://www.mtkenyanews.com/mtker.png" />
+    <link rel="apple-touch-icon" href="https://www.mtkenyanews.com/mtker.png" />
+    <link rel="canonical" href="${canonical}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${title} | Mount Kenya News</title>
+    <meta name="description" content="${description.replace(/"/g, '&quot;')}" />
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}" />
+    <meta property="og:image" content="${image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:url" content="${pageUrl}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Mount Kenya News" />
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:image" content="${image}" />
+    <meta name="twitter:site" content="@mtkenyanews" />
+    <meta name="twitter:creator" content="@mtkenyanews" />
+    
+    <script>
+      // Redirect to hash-based URL so React SPA takes over
+      window.location.href = '/#article/${slug}';
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"><\/script>
+  </body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Neon API listening on http://localhost:${PORT}`);
 });

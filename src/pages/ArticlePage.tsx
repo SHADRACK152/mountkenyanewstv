@@ -180,7 +180,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
   };
 
   const getShareUrl = () => {
-    return `https://www.mtkenyanews.com/#article/${articleSlug}`;
+    return `https://www.mtkenyanews.com/article/${articleSlug}`;
   };
 
   const shareOnFacebook = () => {
