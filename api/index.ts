@@ -486,7 +486,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // ===== ARTICLE PAGE WITH OG TAGS =====
-    const articleSlug = url.searchParams.get('article');
+    // Handle both /api/article/:slug (from Vercel rewrite) and ?article=slug query param
+    let articleSlug = url.searchParams.get('article');
+    if (!articleSlug) {
+      const articleMatch = path.match(/^\/api\/article\/([^/]+)$/);
+      if (articleMatch) {
+        articleSlug = articleMatch[1];
+      }
+    }
+    
     if (articleSlug) {
       try {
         // Helper function to escape HTML
