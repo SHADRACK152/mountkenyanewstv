@@ -138,6 +138,18 @@ app.post('/api/articles/:id/views', async (req, res) => {
   }
 });
 
+// Helper function to escape HTML special characters
+function escapeHtml(text: string): string {
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 // Serve article pages with proper Open Graph meta tags for social media sharing
 app.get('/article/:slug', async (req, res) => {
   const { slug } = req.params;
@@ -157,54 +169,67 @@ app.get('/article/:slug', async (req, res) => {
       return res.status(404).send('Article not found');
     }
 
-    const title = article.title;
-    const description = article.excerpt || article.content?.substring(0, 160) || 'Read this article on Mount Kenya News';
+    const title = escapeHtml(article.title);
+    let description = article.excerpt || '';
+    if (!description && article.content) {
+      description = article.content.substring(0, 160).replace(/<[^>]*>/g, '');
+    }
+    if (!description) {
+      description = 'Read this article on Mount Kenya News';
+    }
+    description = escapeHtml(description);
+    
     const image = article.featured_image || 'https://www.mtkenyanews.com/mtker.png';
     const pageUrl = `https://www.mtkenyanews.com/#article/${slug}`;
-    const canonical = pageUrl;
+    const canonical = `https://www.mtkenyanews.com/article/${slug}`;
 
     const html = `<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="https://www.mtkenyanews.com/mtker.png" />
-    <link rel="apple-touch-icon" href="https://www.mtkenyanews.com/mtker.png" />
-    <link rel="canonical" href="${canonical}" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} | Mount Kenya News</title>
-    <meta name="description" content="${description.replace(/"/g, '&quot;')}" />
-    
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}" />
-    <meta property="og:image" content="${image}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:url" content="${pageUrl}" />
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="Mount Kenya News" />
-    
-    <!-- Twitter Card Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}" />
-    <meta name="twitter:image" content="${image}" />
-    <meta name="twitter:site" content="@mtkenyanews" />
-    <meta name="twitter:creator" content="@mtkenyanews" />
-    
-    <script>
-      // Redirect to hash-based URL so React SPA takes over
-      window.location.href = '/#article/${slug}';
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"><\/script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title} | Mount Kenya News</title>
+  <meta name="description" content="${description}" />
+  <link rel="canonical" href="${canonical}" />
+  <link rel="icon" type="image/png" href="https://www.mtkenyanews.com/mtker.png" />
+  <link rel="apple-touch-icon" href="https://www.mtkenyanews.com/mtker.png" />
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${image}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="${pageUrl}" />
+  <meta property="og:site_name" content="Mount Kenya News" />
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${image}" />
+  <meta name="twitter:site" content="@mtkenyanews" />
+  <meta name="twitter:creator" content="@mtkenyanews" />
+  
+  <!-- Other Meta Tags -->
+  <meta name="theme-color" content="#006633" />
+  
+  <script type="text/javascript">
+    window.location.href = '/#article/${slug}';
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript>
+    <p>Loading article...</p>
+  </noscript>
+</body>
 </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=300');
     res.send(html);
   } catch (err) {
     console.error(err);
