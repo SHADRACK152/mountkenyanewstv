@@ -3,9 +3,12 @@
  * This script runs at build time to create static HTML files for social media crawlers
  */
 
-const fs = require('fs');
-const path = require('path');
-const { Pool } = require('pg');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { Pool } from 'pg';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const pool = new Pool({
   connectionString: process.env.NEON_DATABASE_URL,
@@ -161,12 +164,13 @@ async function generateArticlePages() {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
-  generateArticlePages().then(() => {
-    console.log('Done!');
-    process.exit(0);
-  });
-}
+// Run the script
+generateArticlePages().then(() => {
+  console.log('Done!');
+  process.exit(0);
+}).catch((err) => {
+  console.error('Failed:', err);
+  process.exit(1);
+});
 
 module.exports = { generateArticlePages };
