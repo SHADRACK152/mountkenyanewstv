@@ -700,14 +700,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(404).send('<!DOCTYPE html><html><head><title>Article Not Found</title></head><body>Article not found</body></html>');
         }
         
-        const title = escapeHtml(article.a_title);
-        let description = article.a_excerpt || '';
-        if (!description && article.a_content) {
-          description = article.a_content.substring(0, 160).replace(/<[^>]*>/g, '');
+        const title = escapeHtml(article.title);
+        let description = article.excerpt || '';
+        if (!description && article.content) {
+          description = article.content.substring(0, 160).replace(/<[^>]*>/g, '');
         }
         description = escapeHtml(description || 'Read this article on Mount Kenya News');
         
-        const image = article.a_featured_image || 'https://www.mtkenyanews.com/mtker.png';
+        const image = article.featured_image || 'https://www.mtkenyanews.com/mtker.png';
         const pageUrl = `https://www.mtkenyanews.com/#article/${slug}`;
         const canonical = `https://www.mtkenyanews.com/article/${slug}`;
         
