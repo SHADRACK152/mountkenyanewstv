@@ -172,5 +172,3 @@ generateArticlePages().then(() => {
   console.error('Failed:', err);
   process.exit(1);
 });
-
-module.exports = { generateArticlePages };
