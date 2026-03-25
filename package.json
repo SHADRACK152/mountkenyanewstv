@@ -8,7 +8,8 @@
     "dev:server": "cd server && npm run dev",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "generate:sitemaps": "node scripts/generate-sitemaps.js",
-    "build": "vite build",
+    "generate:articles": "node scripts/generate-articles.js",
+    "build": "npm run generate:articles && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"

@@ -15,7 +15,7 @@
     },
     {
       "source": "/article/:slug([a-z0-9-]+)",
-      "destination": "/api/article/:slug"
+      "destination": "/articles/:slug.html"
     },
     {
       "source": "/s/:code",
