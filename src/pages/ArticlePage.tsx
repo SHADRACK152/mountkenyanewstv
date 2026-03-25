@@ -357,6 +357,9 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                 <button onClick={shareOnTwitter} className="p-2 hover:bg-gray-200 rounded-lg transition-colors" title="Share on Twitter">
                   <Twitter size={20} className="text-gray-900" />
                 </button>
+                <button onClick={shareOnWhatsApp} className="p-2 hover:bg-green-100 rounded-lg transition-colors" title="Share on WhatsApp">
+                  <MessageCircle size={20} className="text-green-500" />
+                </button>
                 <button onClick={copyLink} className={`p-2 rounded-lg transition-colors ${linkCopied ? 'bg-green-100' : 'hover:bg-gray-200'}`} title={linkCopied ? 'Copied!' : 'Copy link'}>
                   {linkCopied ? <Check size={20} className="text-green-600" /> : <Link2 size={20} className="text-gray-700" />}
                 </button>
