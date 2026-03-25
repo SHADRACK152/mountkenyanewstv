@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { Clock, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Send, AlertCircle, Link2, Check, Tag, Share2 } from 'lucide-react';
 import * as api from '../lib/api';
+import { updateMetaTags, updateCanonicalUrl } from '../lib/seo';
 import type { ArticleWithRelations } from '../lib/database.types';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -47,6 +48,24 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (article) {
+      const shareUrl = `https://www.mtkenyanews.com/#article/${articleSlug}`;
+      
+      // Update meta tags for social media sharing
+      updateMetaTags({
+        title: article.title,
+        description: article.excerpt || article.content?.substring(0, 160) || '',
+        image: article.featured_image || '',
+        url: shareUrl,
+        type: 'article'
+      });
+      
+      // Update canonical URL
+      updateCanonicalUrl(shareUrl);
+    }
+  }, [article, articleSlug]);
 
   const fetchArticleData = async () => {
     try {

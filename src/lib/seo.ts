@@ -27,8 +27,8 @@ export function updateMetaTags(options: {
     updatePageTitle(title);
     
     // Open Graph title
-    updateMetaTag('og:title', title + ' | Mount Kenya News');
-    updateMetaTag('twitter:title', title + ' | Mount Kenya News');
+    updateMetaTag('og:title', title);
+    updateMetaTag('twitter:title', title);
   }
 
   if (description) {
@@ -40,6 +40,9 @@ export function updateMetaTags(options: {
   if (image) {
     updateMetaTag('og:image', image);
     updateMetaTag('twitter:image', image);
+    updateMetaTag('og:image:width', '1200');
+    updateMetaTag('og:image:height', '630');
+    updateMetaTag('og:image:type', 'image/jpeg');
   }
 
   if (url) {
@@ -48,7 +51,10 @@ export function updateMetaTags(options: {
   }
 
   updateMetaTag('og:type', type);
+  updateMetaTag('og:site_name', 'Mount Kenya News');
   updateMetaTag('twitter:card', 'summary_large_image');
+  updateMetaTag('twitter:site', '@mtkenyanews');
+  updateMetaTag('twitter:creator', '@mtkenyanews');
 }
 
 function updateMetaTag(property: string, content: string) {
@@ -62,6 +68,16 @@ function updateMetaTag(property: string, content: string) {
     document.head.appendChild(meta);
   }
   meta.content = content;
+}
+
+export function updateCanonicalUrl(url: string) {
+  let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'canonical';
+    document.head.appendChild(link);
+  }
+  link.href = url;
 }
 
 export function resetMetaTags() {
