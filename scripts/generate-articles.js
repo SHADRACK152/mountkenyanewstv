@@ -138,20 +138,20 @@ async function generateArticlePages() {
 </html>`;
 
         // Write to file (slug.html in articles folder)
-        const filePath = path.join(articlesDir, \`\${slug}.html\`);
+        const filePath = path.join(articlesDir, `${slug}.html`);
         fs.writeFileSync(filePath, html, 'utf8');
         count++;
 
         if (count % 50 === 0) {
-          console.log(\`✓ Generated \${count} articles...\`);
+          console.log(`✓ Generated ${count} articles...`);
         }
       } catch (err) {
-        console.error(\`❌ Error generating \${article.slug}:\`, err.message);
+        console.error(`❌ Error generating ${article.slug}:`, err.message);
       }
     }
 
-    console.log(\`✅ Successfully generated \${count} article pages\`);
-    console.log(\`📍 Files saved to: \${articlesDir}\`);
+    console.log(`✅ Successfully generated ${count} article pages`);
+    console.log(`📍 Files saved to: ${articlesDir}`);
     
   } catch (err) {
     console.error('❌ Generation failed:', err);
