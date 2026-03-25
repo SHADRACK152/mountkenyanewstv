@@ -2,5 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api
-Sitemap: https://www.mtkenyanews.com/sitemap.xml
+Sitemap: https://www.mtkenyanews.com/sitemap-index.xml
 

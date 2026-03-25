@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "generate:sitemaps": "node scripts/generate-sitemaps.js",
     "generate:articles": "node scripts/generate-articles.js",
-    "build": "npm run generate:articles && vite build",
+    "build": "npm run generate:sitemaps && npm run generate:articles && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
