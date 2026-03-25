@@ -24,6 +24,7 @@ import AdminSubscribers from './pages/admin/Subscribers';
 import AdminSettings from './pages/admin/Settings';
 import AdminGallery from './pages/admin/Gallery';
 import AdminPolls from './pages/admin/Polls';
+import ShortLinksAdmin from './pages/admin/ShortLinks';
 import PollsPage from './pages/PollsPage';
 import PollPage from './pages/PollPage';
 import SubscribeModal from './components/SubscribeModal';
@@ -31,7 +32,7 @@ import { updatePageTitle, resetMetaTags } from './lib/seo';
 import CareersPage from './pages/CareersPage';
 import AdminCareers from './pages/admin/Careers';
 
-type Page = 'home' | 'category' | 'article' | 'author' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'admin-careers' | 'polls' | 'poll' | 'careers' | 'subscribe';
+type Page = 'home' | 'category' | 'article' | 'author' | 'search' | 'about' | 'contact' | 'privacy' | 'terms' | 'not-found' | 'admin' | 'admin-login' | 'admin-articles' | 'admin-create' | 'admin-edit' | 'admin-categories' | 'admin-authors' | 'admin-comments' | 'admin-subscribers' | 'admin-settings' | 'admin-gallery' | 'admin-polls' | 'admin-short-links' | 'admin-careers' | 'polls' | 'poll' | 'careers' | 'subscribe';
 
 interface RouteState {
   page: Page;
@@ -156,6 +157,8 @@ function App() {
         setRoute({ page: 'admin-gallery' });
       } else if (hash === 'admin/polls') {
         setRoute({ page: 'admin-polls' });
+      } else if (hash === 'admin/short-links') {
+        setRoute({ page: 'admin-short-links' });
       } else if (hash === 'admin/settings') {
         setRoute({ page: 'admin-settings' });
       } else if (hash === 'admin/login' || hash === 'admin-login') {
@@ -214,6 +217,8 @@ function App() {
         return <AdminRoute><AdminSubscribers /></AdminRoute>;
       case 'admin-polls':
         return <AdminRoute><AdminPolls /></AdminRoute>;
+      case 'admin-short-links':
+        return <AdminRoute><ShortLinksAdmin /></AdminRoute>;
       case 'admin-gallery':
         return <AdminRoute><AdminGallery /></AdminRoute>;
       case 'admin-settings':

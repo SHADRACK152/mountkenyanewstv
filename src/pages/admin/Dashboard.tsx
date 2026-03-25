@@ -3,7 +3,7 @@ import { getAdminStats, getCategories, getAuthors } from '../../lib/api';
 import { 
   LayoutDashboard, FileText, Eye, TrendingUp, Plus, 
   LogOut, Settings, Users, Folder, ArrowUpRight, Calendar,
-  MessageSquare, Mail, Image, Vote
+  MessageSquare, Mail, Image, Vote, Link
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -86,6 +86,10 @@ export default function AdminDashboard() {
           <a href="#admin/polls" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Vote size={18} />
             Voting Polls
+          </a>
+          <a href="#admin/short-links" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Link size={18} />
+            Short Links
           </a>
           <a href="#admin/settings" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Settings size={18} />
