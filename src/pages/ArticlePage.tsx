@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { Clock, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Send, AlertCircle, Link2, Check, Tag, Share2 } from 'lucide-react';
+import { Clock, Facebook, Twitter, Mail, Heart, MessageCircle, Eye, Send, AlertCircle, Link2, Check, Tag, Share2, Instagram, Linkedin, Share } from 'lucide-react';
 import * as api from '../lib/api';
 import { updateMetaTags, updateCanonicalUrl } from '../lib/seo';
 import type { ArticleWithRelations } from '../lib/database.types';
@@ -195,10 +195,37 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
 
   const shareOnWhatsApp = () => {
     const url = getShareUrl();
-    // WhatsApp will unfurl the link and show the image from og:image meta tag
-    // Format: link first so preview shows, then title and excerpt
     const text = `${url}\n\n📰 *${article?.title || ''}*\n\n${article?.excerpt || ''}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const shareOnInstagram = () => {
+    const url = getShareUrl();
+    // Instagram doesn't have a direct share intent, so copy link and show message
+    navigator.clipboard.writeText(url).then(() => {
+      alert(`Share on Instagram:\n\n${article?.title}\n${article?.excerpt}\n${url}`);
+    });
+  };
+
+  const shareOnLinkedIn = () => {
+    const url = getShareUrl();
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'width=600,height=500');
+  };
+
+  const shareOnTelegram = () => {
+    const url = getShareUrl();
+    const text = `${article?.title}\n${url}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const shareOnPinterest = () => {
+    const url = getShareUrl();
+    window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&description=${encodeURIComponent(article?.title || '')}`, '_blank', 'width=750,height=500');
+  };
+
+  const shareOnReddit = () => {
+    const url = getShareUrl();
+    window.open(`https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(article?.title || '')}`, '_blank', 'width=700,height=600');
   };
 
   const copyLink = async () => {
@@ -350,7 +377,7 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button onClick={shareOnFacebook} className="p-2 hover:bg-blue-100 rounded-lg transition-colors" title="Share on Facebook">
                   <Facebook size={20} className="text-blue-600" />
                 </button>
@@ -359,6 +386,21 @@ export default function ArticlePage({ articleSlug }: ArticlePageProps) {
                 </button>
                 <button onClick={shareOnWhatsApp} className="p-2 hover:bg-green-100 rounded-lg transition-colors" title="Share on WhatsApp">
                   <MessageCircle size={20} className="text-green-500" />
+                </button>
+                <button onClick={shareOnInstagram} className="p-2 hover:bg-pink-100 rounded-lg transition-colors" title="Share on Instagram">
+                  <Instagram size={20} className="text-pink-600" />
+                </button>
+                <button onClick={shareOnLinkedIn} className="p-2 hover:bg-blue-100 rounded-lg transition-colors" title="Share on LinkedIn">
+                  <Linkedin size={20} className="text-blue-700" />
+                </button>
+                <button onClick={shareOnTelegram} className="p-2 hover:bg-blue-100 rounded-lg transition-colors" title="Share on Telegram">
+                  <Send size={20} className="text-blue-500" />
+                </button>
+                <button onClick={shareOnPinterest} className="p-2 hover:bg-red-100 rounded-lg transition-colors" title="Share on Pinterest">
+                  <Share2 size={20} className="text-red-600" />
+                </button>
+                <button onClick={shareOnReddit} className="p-2 hover:bg-orange-100 rounded-lg transition-colors" title="Share on Reddit">
+                  <Share size={20} className="text-orange-500" />
                 </button>
                 <button onClick={copyLink} className={`p-2 rounded-lg transition-colors ${linkCopied ? 'bg-green-100' : 'hover:bg-gray-200'}`} title={linkCopied ? 'Copied!' : 'Copy link'}>
                   {linkCopied ? <Check size={20} className="text-green-600" /> : <Link2 size={20} className="text-gray-700" />}
